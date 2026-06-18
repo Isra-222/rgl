@@ -22,6 +22,13 @@
 #pragma once
 
 namespace rgl {
+    inline float abs(float x) {
+        return (x < 0) ? -x : x;
+    }
+    inline float lerp(float a, float b, float t) {
+        return a + t * (b - a);
+    }
+
 	inline float sin(float x) {
         const float PI = 3.14159265f;
         x = x - 2 * PI * (int)(x / (2 * PI));

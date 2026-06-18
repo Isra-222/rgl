@@ -87,8 +87,8 @@ namespace rgl {
 		    if (_size == _capacity) {
 		        reserve(_capacity == 0 ? 1 : _capacity * 2);
 		    }
-		    ptr[_size] = rgl::move(value);
-		    _size++;
+			new (&ptr[_size]) T(rgl::move(value));
+			_size++;
 		}
 		void reserve(size_t s){
 			if(s > _capacity) reallocate(s);
@@ -111,6 +111,13 @@ namespace rgl {
 		    }
 		    _size = 0;
 		}
+		void pop_back() {
+ 			if(_size > 0)
+ 				ptr[--_size].~T();
+        }
+        bool empty() const {
+        	return _size == 0;
+        }
 
 
 		T& operator[](size_t index){ return ptr[index]; }
@@ -124,5 +131,26 @@ namespace rgl {
 
 		const_iterator begin() const { return ptr; }
 		const_iterator end() const { return ptr + _size; }
+	};
+
+	//Array
+	template<typename T, size_t N>
+	class array{
+		T data[N];
+	public:
+		constexpr size_t size() const { return N; }
+		T& operator[](size_t index){ return data[index]; }
+		const T& operator[](size_t index) const { return data[index]; }
+
+		using iterator = T*;
+		using const_iterator = const T*;
+
+		iterator begin() { return data; }
+    	iterator end() { return data + N; }
+
+    	const_iterator begin() const { return data; }
+    	const_iterator end() const { return data + N; }
+
+    	T* data_ptr() { return data;}
 	};
 };

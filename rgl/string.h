@@ -17,7 +17,6 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-
 //string
 #pragma once
 
@@ -27,66 +26,67 @@
 
 namespace rgl {
 
-	class string {
-		static const size_t npos = size_t(-1);
-		char* buffer;
-		size_t len;
+    class string {
+        char* buffer = nullptr;
+        size_t len = 0;
 
-		void reserve(size_t new_len) {
-			if (new_len > len) {
-				char* new_buffer = new char[new_len + 1];
-				if (buffer) {
-					memcpy(new_buffer, buffer, len);
-					delete[] buffer;
-				}
-				buffer = new_buffer;
-				buffer[len] = '\0';
-			}
-		}
-		
-	public:
-		string() : buffer(nullptr), len(0) {}
+        void reserve(size_t new_len) {
+            if (new_len > len) {
+                char* new_buffer = new char[new_len + 1];
+                if (buffer) {
+                    memcpy(new_buffer, buffer, len);
+                    delete[] buffer;
+                }
+                buffer = new_buffer;
+                buffer[len] = '\0';
+            }
+        }
+        
+    public:
+        static const size_t npos = size_t(-1);
 
-		string(const string_view& sv);
+        string() : buffer(nullptr), len(0) {}
 
-		string(const char* str) : len(str? strlen(str) : 0){
-			if(len > 0){
-				buffer = new char[len + 1];
-				memcpy(buffer, str, len + 1);
-			} else {
-				buffer = nullptr;
-			}
-		}
-		
-		string(size_t count, char ch) : len(count) {
-			if (len > 0) {
-				buffer = new char[len + 1];
-				for (size_t i = 0; i < len; ++i) {
-					buffer[i] = ch;
-				}
-				buffer[len] = '\0';
-			} else {
-				buffer = nullptr;
-			}
-		}
-		
-		string(string&& other) noexcept : buffer(other.buffer), len(other.len) {
-		    other.buffer = nullptr;
-			other.len = 0;
-		}
-		
-		string& operator=(string&& other) noexcept {
-		    if (this != &other) {
-		        delete[] buffer; 
-		        buffer = other.buffer;
-		        len = other.len;
-		        other.buffer = nullptr;
-		        other.len = 0;
-		    }
-		    return *this;
-		}
-		
-	    string(const string& other) : len(other.len) {
+        string(const string_view& sv);
+
+        string(const char* str) : len(str? strlen(str) : 0){
+            if(len > 0){
+                buffer = new char[len + 1];
+                memcpy(buffer, str, len + 1);
+            } else {
+                buffer = nullptr;
+            }
+        }
+        
+        string(size_t count, char ch) : len(count) {
+            if (len > 0) {
+                buffer = new char[len + 1];
+                for (size_t i = 0; i < len; ++i) {
+                    buffer[i] = ch;
+                }
+                buffer[len] = '\0';
+            } else {
+                buffer = nullptr;
+            }
+        }
+        
+        string(string&& other) noexcept : buffer(other.buffer), len(other.len) {
+            other.buffer = nullptr;
+            other.len = 0;
+        }
+        
+        string& operator=(string&& other) noexcept {
+            if (this != &other) {
+                delete[] buffer; 
+                buffer = other.buffer;
+                len = other.len;
+                other.buffer = nullptr;
+                other.len = 0;
+            }
+            return *this;
+        }
+        
+        string(const string& other) : len(other.len) {
             if (other.buffer) {
                 buffer = new char[len + 1];
                 memcpy(buffer, other.buffer, len + 1);
@@ -109,87 +109,87 @@ namespace rgl {
             return *this;
         }
 
-		string& operator=(const char* str) {
-			delete[] buffer;
-			len = str ? strlen(str) : 0;
-			if (len > 0) {
-				buffer = new char[len + 1];
-				memcpy(buffer, str, len + 1);
-			} else {
-				buffer = nullptr;
-			}
-			return *this;
-		}
+        string& operator=(const char* str) {
+            delete[] buffer;
+            len = str ? strlen(str) : 0;
+            if (len > 0) {
+                buffer = new char[len + 1];
+                memcpy(buffer, str, len + 1);
+            } else {
+                buffer = nullptr;
+            }
+            return *this;
+        }
 
         bool operator==(const string& other) const {
-		    if (len != other.len) return false;
-		    for (size_t i = 0; i < len; ++i) {
-		        if (buffer[i] != other.buffer[i]) return false;
-		    }
-		    return true;
-		}
-		
-		bool operator==(const char* str) const {
-    		return (len == strlen(str)) && (memcmp(buffer, str, len) == 0);
-		}
+            if (len != other.len) return false;
+            for (size_t i = 0; i < len; ++i) {
+                if (buffer[i] != other.buffer[i]) return false;
+            }
+            return true;
+        }
+        
+        bool operator==(const char* str) const {
+            return (len == strlen(str)) && (memcmp(buffer, str, len) == 0);
+        }
 
-		string& operator+=(char c) {
-			size_t new_len = len + 1;
-			char* new_buffer = new char[new_len + 1];
-			if (buffer) {
-				memcpy(new_buffer, buffer, len);
-				delete[] buffer;
-			}
-			new_buffer[len] = c;
-			new_buffer[new_len] = '\0';
-			buffer = new_buffer;
-			len = new_len;
-			return *this;
-		}
+        string& operator+=(char c) {
+            size_t new_len = len + 1;
+            char* new_buffer = new char[new_len + 1];
+            if (buffer) {
+                memcpy(new_buffer, buffer, len);
+                delete[] buffer;
+            }
+            new_buffer[len] = c;
+            new_buffer[new_len] = '\0';
+            buffer = new_buffer;
+            len = new_len;
+            return *this;
+        }
 
-		string& operator+=(const char* str) {
-			if (!str || !*str) return *this;
-			size_t str_len = strlen(str);
-			size_t new_len = len + str_len;
-			char* new_buffer = new char[new_len + 1];
-			if (buffer) {
-				memcpy(new_buffer, buffer, len);
-				delete[] buffer;
-			}
-			memcpy(new_buffer + len, str, str_len);
-			new_buffer[new_len] = '\0';
-			buffer = new_buffer;
-			len = new_len;
-			return *this;
-		}
+        string& operator+=(const char* str) {
+            if (!str || !*str) return *this;
+            size_t str_len = strlen(str);
+            size_t new_len = len + str_len;
+            char* new_buffer = new char[new_len + 1];
+            if (buffer) {
+                memcpy(new_buffer, buffer, len);
+                delete[] buffer;
+            }
+            memcpy(new_buffer + len, str, str_len);
+            new_buffer[new_len] = '\0';
+            buffer = new_buffer;
+            len = new_len;
+            return *this;
+        }
 
-		string& operator+=(const string& other) {
-			return *this += other.c_str();
-		}
+        string& operator+=(const string& other) {
+            return *this += other.c_str();
+        }
 
-		char& operator[](size_t index) {
-			return buffer[index];
-		}
-		
-		const char& operator[](size_t index) const {
-			return buffer[index];
-		}
+        char& operator[](size_t index) {
+            return buffer[index];
+        }
+        
+        const char& operator[](size_t index) const {
+            return buffer[index];
+        }
 
-		void clear() {
-			delete[] buffer;
-			buffer = nullptr;
-			len = 0;
-		}
+        void clear() {
+            delete[] buffer;
+            buffer = nullptr;
+            len = 0;
+        }
 
-		bool empty() const {
-			return len == 0;
-		}
+        bool empty() const {
+            return len == 0;
+        }
 
-	    ~string() {
-        	delete[] buffer; 
-    	}
+        ~string() {
+            delete[] buffer; 
+        }
 
-		const char* c_str() const { return buffer ? buffer : ""; }
+        const char* c_str() const { return buffer ? buffer : ""; }
         size_t size() const { return len; }
         size_t length() const { return len; }
         string_view view() const;
@@ -221,215 +221,266 @@ namespace rgl {
             result.len = count;
             return result;
         }
-		size_t find_first_of(const char* chars, size_t pos = 0) const {
-		    if (!chars) return npos;
-		    
-		    for (size_t i = pos; i < len; ++i) {
-		        for (const char* c = chars; *c; ++c) {
-		            if (buffer[i] == *c) return i;
-		        }
-		    }
-		    return npos;
-		}
 
-		string& replace(size_t pos, size_t count, const char* str) {
-		    if (pos > len) return *this;
+        size_t find_first_of(const char* chars, size_t pos = 0) const {
+            if (!chars) return npos;
+            for (size_t i = pos; i < len; ++i) {
+                for (const char* c = chars; *c; ++c) {
+                    if (buffer[i] == *c) return i;
+                }
+            }
+            return npos;
+        }
+        size_t find_last_of(const char* chars, size_t pos = size_t(-1)) const {
+            if (!chars || len == 0) return npos;
 
-		    if (count > len - pos) count = len - pos;
-		    
-		    size_t str_len = str ? strlen(str) : 0;
-		    size_t new_len = len - count + str_len;
-		    
-		    char* new_buffer = new char[new_len + 1];
+            size_t start = (pos >= len) ? len - 1 : pos;
+            
+            for (size_t i = start; i != size_t(-1); --i) {
+                for (const char* c = chars; *c; ++c) {
+                    if (buffer[i] == *c) return i;
+                }
+            }
+            return npos;
+        }
+        size_t find_last_of(char ch, size_t pos = size_t(-1)) const {
+            if (len == 0) return npos;
+            size_t start = (pos >= len) ? len - 1 : pos;
+            for (size_t i = start; i != size_t(-1); --i) {
+                if (buffer[i] == ch) return i;
+            }
+            return npos;
+        }
 
-		    if (pos > 0) {
-		        memcpy(new_buffer, buffer, pos);
-		    }
+        void erase(size_t index, size_t count = size_t(-1)) {
+            if (index >= len) return;
+            if (count == size_t(-1) || index + count > len) {
+                count = len - index;
+            }
+            if (count == 0) return;
 
-		    if (str_len > 0) {
-		        memcpy(new_buffer + pos, str, str_len);
-		    }
+            size_t new_len = len - count;
+            char* new_buffer = nullptr;
+            if (new_len > 0) {
+                new_buffer = new char[new_len + 1];
+                if (index > 0) {
+                    memcpy(new_buffer, buffer, index);
+                }
+                if (index + count < len) {
+                    memcpy(new_buffer + index, buffer + index + count, len - (index + count));
+                }
+                new_buffer[new_len] = '\0';
+            }
+            delete[] buffer;
+            buffer = new_buffer;
+            len = new_len;
+        }
 
-		    if (pos + count < len) {
-		        memcpy(new_buffer + pos + str_len, buffer + pos + count, len - (pos + count));
-		    }
-		    
-		    new_buffer[new_len] = '\0';
-		    
-		    delete[] buffer;
-		    buffer = new_buffer;
-		    len = new_len;
-		    
-		    return *this;
-		}
+        size_t find_first_not_of(const char* chars, size_t pos = 0) const {
+            if (!chars) return pos < len ? pos : npos;
+            for (size_t i = pos; i < len; ++i) {
+                bool found = false;
+                for (const char* c = chars; *c; ++c) {
+                    if (buffer[i] == *c) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) return i;
+            }
+            return npos;
+        }
 
-		string& replace(size_t pos, size_t count, const string& str) {
-		    return replace(pos, count, str.c_str());
-		}
+        size_t find_last_not_of(const char* chars, size_t pos = size_t(-1)) const {
+            if (len == 0) return npos;
+            size_t start = (pos == size_t(-1) || pos >= len) ? len - 1 : pos;
+            for (size_t i = start; i != size_t(-1); --i) {
+                bool found = false;
+                for (const char* c = chars; *c; ++c) {
+                    if (buffer[i] == *c) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) return i;
+            }
+            return npos;
+        }
 
-		string& replace_all(const char* from, const char* to) {
-		    if (!from || !*from) return *this;
-		    
-		    size_t from_len = strlen(from);
-		    size_t to_len = to ? strlen(to) : 0;
+        string& replace(size_t pos, size_t count, const char* str) {
+            if (pos > len) return *this;
+            if (count > len - pos) count = len - pos;
+            size_t str_len = str ? strlen(str) : 0;
+            size_t new_len = len - count + str_len;
+            char* new_buffer = new char[new_len + 1];
+            if (pos > 0) {
+                memcpy(new_buffer, buffer, pos);
+            }
+            if (str_len > 0) {
+                memcpy(new_buffer + pos, str, str_len);
+            }
+            if (pos + count < len) {
+                memcpy(new_buffer + pos + str_len, buffer + pos + count, len - (pos + count));
+            }
+            new_buffer[new_len] = '\0';
+            delete[] buffer;
+            buffer = new_buffer;
+            len = new_len;
+            return *this;
+        }
 
-		    size_t count = 0;
-		    size_t pos = 0;
-		    while ((pos = find(from, pos)) != size_t(-1)) {
-		        ++count;
-		        pos += from_len;
-		    }
-		    
-		    if (count == 0) return *this;
-		    
-		    size_t new_len = len + count * (to_len - from_len);
-		    char* new_buffer = new char[new_len + 1];
-		    
-		    size_t src_pos = 0;
-		    size_t dst_pos = 0;
-		    pos = 0;
-		    
-		    while ((pos = find(from, src_pos)) != size_t(-1)) {
-		        size_t chunk_len = pos - src_pos;
-		        if (chunk_len > 0) {
-		            memcpy(new_buffer + dst_pos, buffer + src_pos, chunk_len);
-		            dst_pos += chunk_len;
-		        }
-		        
-		        if (to_len > 0) {
-		            memcpy(new_buffer + dst_pos, to, to_len);
-		            dst_pos += to_len;
-		        }
-		        
-		        src_pos = pos + from_len;
-		    }
+        string& replace(size_t pos, size_t count, const string& str) {
+            return replace(pos, count, str.c_str());
+        }
 
-		    if (src_pos < len) {
-		        memcpy(new_buffer + dst_pos, buffer + src_pos, len - src_pos);
-		        dst_pos += len - src_pos;
-		    }
-		    
-		    new_buffer[new_len] = '\0';
-		    
-		    delete[] buffer;
-		    buffer = new_buffer;
-		    len = new_len;
-		    
-		    return *this;
-		}
+        string& replace_all(const char* from, const char* to) {
+            if (!from || !*from) return *this;
+            size_t from_len = strlen(from);
+            size_t to_len = to ? strlen(to) : 0;
+            size_t count = 0;
+            size_t pos = 0;
+            while ((pos = find(from, pos)) != size_t(-1)) {
+                ++count;
+                pos += from_len;
+            }
+            if (count == 0) return *this;
+            size_t new_len = len + count * (to_len - from_len);
+            char* new_buffer = new char[new_len + 1];
+            size_t src_pos = 0;
+            size_t dst_pos = 0;
+            pos = 0;
+            while ((pos = find(from, src_pos)) != size_t(-1)) {
+                size_t chunk_len = pos - src_pos;
+                if (chunk_len > 0) {
+                    memcpy(new_buffer + dst_pos, buffer + src_pos, chunk_len);
+                    dst_pos += chunk_len;
+                }
+                if (to_len > 0) {
+                    memcpy(new_buffer + dst_pos, to, to_len);
+                    dst_pos += to_len;
+                }
+                src_pos = pos + from_len;
+            }
+            if (src_pos < len) {
+                memcpy(new_buffer + dst_pos, buffer + src_pos, len - src_pos);
+                dst_pos += len - src_pos;
+            }
+            new_buffer[new_len] = '\0';
+            delete[] buffer;
+            buffer = new_buffer;
+            len = new_len;
+            return *this;
+        }
 
-		string& replace(char from, char to) {
-		    for (size_t i = 0; i < len; ++i) {
-		        if (buffer[i] == from) buffer[i] = to;
-		    }
-		    return *this;
-		}
+        string& replace(char from, char to) {
+            for (size_t i = 0; i < len; ++i) {
+                if (buffer[i] == from) buffer[i] = to;
+            }
+            return *this;
+        }
 
-		size_t find(char ch, size_t pos = 0) const {
-		    for (size_t i = pos; i < len; ++i) {
-		        if (buffer[i] == ch) return i;
-		    }
-		    return size_t(-1);
-		}
+        size_t find(char ch, size_t pos = 0) const {
+            for (size_t i = pos; i < len; ++i) {
+                if (buffer[i] == ch) return i;
+            }
+            return size_t(-1);
+        }
 
-		size_t find(const char* str, size_t pos = 0) const {
-		    if (!str || !*str) return pos;
-		    size_t str_len = strlen(str);
-		    if (str_len > len) return size_t(-1);
-		    
-		    for (size_t i = pos; i <= len - str_len; ++i) {
-		        bool found = true;
-		        for (size_t j = 0; j < str_len; ++j) {
-		            if (buffer[i + j] != str[j]) {
-		                found = false;
-		                break;
-		            }
-		        }
-		        if (found) return i;
-		    }
-		    return size_t(-1);
-		}
+        size_t find(const char* str, size_t pos = 0) const {
+            if (!str || !*str) return pos;
+            size_t str_len = strlen(str);
+            if (str_len > len) return size_t(-1);
+            for (size_t i = pos; i <= len - str_len; ++i) {
+                bool found = true;
+                for (size_t j = 0; j < str_len; ++j) {
+                    if (buffer[i + j] != str[j]) {
+                        found = false;
+                        break;
+                    }
+                }
+                if (found) return i;
+            }
+            return size_t(-1);
+        }
 
-		size_t find(const string& str, size_t pos = 0) const {
-		    return find(str.c_str(), pos);
-		}
+        size_t find(const string& str, size_t pos = 0) const {
+            return find(str.c_str(), pos);
+        }
 
-		size_t rfind(char ch, size_t pos = size_t(-1)) const {
-		    if (pos == size_t(-1) || pos >= len) pos = len - 1;
-		    for (size_t i = pos; i != size_t(-1); --i) {
-		        if (buffer[i] == ch) return i;
-		    }
-		    return size_t(-1);
-		}
+        size_t rfind(char ch, size_t pos = size_t(-1)) const {
+            if (pos == size_t(-1) || pos >= len) pos = len - 1;
+            for (size_t i = pos; i != size_t(-1); --i) {
+                if (buffer[i] == ch) return i;
+            }
+            return size_t(-1);
+        }
 
-		size_t rfind(const char* str, size_t pos = size_t(-1)) const {
-		    if (!str || !*str) return pos == size_t(-1) ? len : pos;
-		    size_t str_len = strlen(str);
-		    if (str_len > len) return size_t(-1);
-		    
-		    if (pos == size_t(-1) || pos > len - str_len) {
-		        pos = len - str_len;
-		    }
-		    
-		    for (size_t i = pos; i != size_t(-1); --i) {
-		        bool found = true;
-		        for (size_t j = 0; j < str_len; ++j) {
-		            if (buffer[i + j] != str[j]) {
-		                found = false;
-		                break;
-		            }
-		        }
-		        if (found) return i;
-		    }
-		    return size_t(-1);
-		}
+        size_t rfind(const char* str, size_t pos = size_t(-1)) const {
+            if (!str || !*str) return pos == size_t(-1) ? len : pos;
+            size_t str_len = strlen(str);
+            if (str_len > len) return size_t(-1);
+            if (pos == size_t(-1) || pos > len - str_len) {
+                pos = len - str_len;
+            }
+            for (size_t i = pos; i != size_t(-1); --i) {
+                bool found = true;
+                for (size_t j = 0; j < str_len; ++j) {
+                    if (buffer[i + j] != str[j]) {
+                        found = false;
+                        break;
+                    }
+                }
+                if (found) return i;
+            }
+            return size_t(-1);
+        }
 
-		size_t rfind(const string& str, size_t pos = size_t(-1)) const {
-		    return rfind(str.c_str(), pos);
-		}
-	};
+        size_t rfind(const string& str, size_t pos = size_t(-1)) const {
+            return rfind(str.c_str(), pos);
+        }
+    };
 
-	inline string::string(const string_view& sv) : len(sv.size()) {
-	    if (len > 0) {
-	        buffer = new char[len + 1];
-	        memcpy(buffer, sv.data(), len);
-	        buffer[len] = '\0';
-	    } else {
-	        buffer = nullptr;
-	    }
-	}
-	inline string_view string::view() const { 
+    inline string::string(const string_view& sv) : len(sv.size()) {
+        if (len > 0) {
+            buffer = new char[len + 1];
+            memcpy(buffer, sv.data(), len);
+            buffer[len] = '\0';
+        } else {
+            buffer = nullptr;
+        }
+    }
+    inline string_view string::view() const { 
         return string_view(this->c_str()); 
     }
 
-	inline string operator+(const string& lhs, char rhs) {
-		string result = lhs;
-		result += rhs;
-		return result;
-	}
-	
-	inline string operator+(const string& lhs, const char* rhs) {
-		string result = lhs;
-		result += rhs;
-		return result;
-	}
-	
-	inline string operator+(const string& lhs, const string& rhs) {
-		string result = lhs;
-		result += rhs;
-		return result;
-	}
-	
-	inline string operator+(char lhs, const string& rhs) {
-		string result(1, lhs);
-		result += rhs;
-		return result;
-	}
-	
-	inline string operator+(const char* lhs, const string& rhs) {
-		string result(lhs);
-		result += rhs;
-		return result;
-	}
-	
-};
+    inline string operator+(const string& lhs, char rhs) {
+        string result = lhs;
+        result += rhs;
+        return result;
+    }
+    
+    inline string operator+(const string& lhs, const char* rhs) {
+        string result = lhs;
+        result += rhs;
+        return result;
+    }
+    
+    inline string operator+(const string& lhs, const string& rhs) {
+        string result = lhs;
+        result += rhs;
+        return result;
+    }
+    
+    inline string operator+(char lhs, const string& rhs) {
+        string result(1, lhs);
+        result += rhs;
+        return result;
+    }
+    
+    inline string operator+(const char* lhs, const string& rhs) {
+        string result(lhs);
+        result += rhs;
+        return result;
+    }
+    
+} // namespace rgl
