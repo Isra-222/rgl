@@ -69,7 +69,7 @@ namespace rgl {
             }
         };
 
-        class directory_iterator {
+        class directory_iterator final{
             DIR* dir_stream = nullptr;
             struct dirent* current_entry = nullptr;
             rgl::string base_path;

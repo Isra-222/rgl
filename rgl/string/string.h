@@ -21,8 +21,8 @@
 #pragma once
 
 #include "string_view.h"
-#include "new.h"
-#include "utility.h"
+#include "../mem/new.h"
+#include "../core/utility.h"
 
 namespace rgl {
 
@@ -482,5 +482,4 @@ namespace rgl {
         result += rhs;
         return result;
     }
-    
 } // namespace rgl

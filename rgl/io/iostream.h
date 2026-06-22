@@ -17,39 +17,13 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-//linear
+//iostream
 #pragma once
 
-#include "../core/types.h"
-#include "../mem/new.h"
+#include "istream.h"
+#include "ostream.h"
 
-namespace rgl {
-	class linearAllocator final{
-		uint8_t* m_begin;
-		uint8_t* m_current;
-		size_t m_capacity;
-	public:
-		linearAllocator(size_t s)
-		: m_begin(nullptr), m_current(nullptr), m_capacity(s){
-			m_begin = reinterpret_cast<uint8_t*>(::operator new[](m_capacity));
-			m_current = m_begin;
-		}
-		~linearAllocator(){
-			::operator delete[](m_begin);
-			m_begin = nullptr;
-			m_current = nullptr;
-		}
-
-		template<typename T>
-		T* push(size_t bytes){
-			if(m_current + bytes > m_begin + m_capacity) return nullptr;
-			
-			T* ptr = reinterpret_cast<T*>(m_current);
-			m_current += bytes;
-			return ptr;
-		}
-		void reset(){
-			m_current = m_begin;
-		}
-	};
-}//namespace rgl
+namespace rgl{
+    inline ostream out;
+    inline istream in;
+}

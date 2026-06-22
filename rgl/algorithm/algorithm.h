@@ -20,7 +20,7 @@
 //algorithm
 
 #pragma once
-#include "utility.h"
+#include "../core/utility.h"
 
 namespace rgl {
 

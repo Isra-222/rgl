@@ -20,13 +20,13 @@
 #pragma once 
 
 #include <time.h>
-#include "math.h"
+#include "../math/math.h"
 
 namespace rgl::anemo {
     
     //durations
     template<typename Rep, typename Period = rgl::ratio<1>>
-    class Duration {
+    class Duration final {
         Rep ticks_;
     public:
         constexpr Duration() : ticks_(0) {}
@@ -81,7 +81,7 @@ namespace rgl::anemo {
 
     //clocks
     template<typename Clock, typename Duration>
-    class time_point {
+    class time_point final {
         Duration duration_;
     public:
         constexpr time_point() : duration_(0) {}
@@ -94,7 +94,7 @@ namespace rgl::anemo {
         }
     };
 
-    class system_clock {
+    class system_clock final{
     public:
         using rep = int64_t;
         using period = rgl::ratio<1, 1000000000>; 
@@ -109,7 +109,7 @@ namespace rgl::anemo {
         }
     };
 
-    class steady_clock {
+    class steady_clock final{
     public:
         using rep = int64_t;
         using period = rgl::ratio<1, 1000000000>;

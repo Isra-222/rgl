@@ -94,9 +94,6 @@ namespace rgl{
         return detail::_wymum(_wyp[4] ^ len, detail::_wymum(a ^ _wyp[1], b ^ seed));
     }
 
-    inline uint64_t wyhash(rgl::string_view sv, uint64_t seed = 0) {
-        return wyhash_impl(reinterpret_cast<const uint8_t*>(sv.data()), sv.size(), seed);
-    }
     inline uint64_t wyhash(const uint8_t* data, size_t len, uint64_t seed) {
         return wyhash_impl(data, len, seed); 
     }

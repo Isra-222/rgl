@@ -55,4 +55,8 @@ namespace rgl {
             using uintptr_t = unsigned int;
         #endif
     #endif
+
+    #ifndef UINT64_C
+        #define UINT64_C(val) val##ULL
+    #endif
 }

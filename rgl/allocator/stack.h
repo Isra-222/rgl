@@ -19,12 +19,12 @@
 
 #pragma once
 
-#include "../types.h"
-#include "../new.h"
+#include "../core/types.h"
+#include "../mem/new.h"
 
 namespace rgl {
 	
-	class stackAllocator{
+	class stackAllocator final{
 		uint8_t* m_begin;
 		uint8_t* m_current;
 		size_t m_capacity;

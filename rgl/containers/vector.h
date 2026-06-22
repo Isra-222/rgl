@@ -20,9 +20,9 @@
 //vector
 #pragma once
 
-#include "types.h"
-#include "utility.h"
-#include "new.h"
+#include "../core/types.h"
+#include "../core/utility.h"
+#include "../mem/new.h"
 
 namespace rgl {
 	template<typename T>
@@ -122,6 +122,8 @@ namespace rgl {
 
 		T& operator[](size_t index){ return ptr[index]; }
 		const T& operator[](size_t index) const { return ptr[index]; }
+		T& front() { return ptr[0]; }
+        T& back() { return ptr[_size - 1]; }
 
 		using iterator = T*;
 		using const_iterator = const T*;
@@ -131,26 +133,5 @@ namespace rgl {
 
 		const_iterator begin() const { return ptr; }
 		const_iterator end() const { return ptr + _size; }
-	};
-
-	//Array
-	template<typename T, size_t N>
-	class array{
-		T data[N];
-	public:
-		constexpr size_t size() const { return N; }
-		T& operator[](size_t index){ return data[index]; }
-		const T& operator[](size_t index) const { return data[index]; }
-
-		using iterator = T*;
-		using const_iterator = const T*;
-
-		iterator begin() { return data; }
-    	iterator end() { return data + N; }
-
-    	const_iterator begin() const { return data; }
-    	const_iterator end() const { return data + N; }
-
-    	T* data_ptr() { return data;}
 	};
 };

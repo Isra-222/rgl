@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include "types.h"
+#include "../core/types.h"
 
 namespace rgl {
     inline size_t strlen(const char* str){

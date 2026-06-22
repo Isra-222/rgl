@@ -21,6 +21,7 @@
 #pragma once
 
 #include "traits.h"
+#include "concepts.h"
 
 namespace rgl {
 	template <typename To, typename From, typename Enable = void>
@@ -62,7 +63,7 @@ namespace rgl {
 	}
 
 	template <typename To, typename From>
-	[[nodiscard]] inline auto dyn_cast(From *Val) {
+	[[nodiscard]] inline auto dyn_cast(From *Val) requires DerivedFrom<To, From> || has_classof<To>::value {
 	    if (isa<To>(Val)) return CastInfo<To, From*>::doCast(Val);
 	    return static_cast<To*>(nullptr);
 	}

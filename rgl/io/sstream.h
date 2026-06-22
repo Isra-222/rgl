@@ -17,58 +17,50 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-//istream
+//sstream
 #pragma once
 
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
-#include "string.h"
+#include "../string/string.h"
 
 namespace rgl {
 
-    class fstream {
-        char* data_ptr = nullptr;
-        size_t file_size = 0;
+    class sstream {
+        rgl::string data;
         size_t cursor = 0;
 
     public:
-        fstream(const rgl::string& path) {
+        sstream() = default;
 
-			int fd = open(path.c_str(), O_RDONLY);
-			if (fd == -1) return;
+        sstream(const rgl::string& str) : data(str) {}
 
-			struct stat st;
-			fstat(fd, &st);
-			file_size = st.st_size;
-
-			data_ptr = (char*)mmap(nullptr, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
-			::close(fd);
+        char peek() const { 
+            return (cursor < data.length()) ? data[cursor] : '\0'; 
+        }
+        
+        void advance() { 
+            if (cursor < data.length()) cursor++; 
+        }
+        
+        bool isAtEnd() const { 
+            return cursor >= data.length(); 
+        }
+        
+        bool isOpen() const { 
+            return true;
+        }
+        void str(const rgl::string& s) {
+            data = s;
+            cursor = 0;
         }
 
-        ~fstream() {
-            if (data_ptr) {
-                munmap(data_ptr, file_size);
-            }
+        rgl::string str() const {
+            return data;
         }
-
-        void close() {
-            if (data_ptr != nullptr) {
-                munmap(data_ptr, file_size);
-                data_ptr = nullptr;
-                file_size = 0;
-                cursor = 0;
-            }
+        void clear() {
+            cursor = 0;
         }
-
-        char peek() const { return (cursor < file_size) ? data_ptr[cursor] : '\0'; }
-        void advance() { if (cursor < file_size) cursor++; }
-        bool isAtEnd() const { return cursor >= file_size; }
-        bool isOpen() const { return data_ptr != nullptr; }
     };
-    inline bool getline(rgl::fstream& stream, rgl::string& line) {
+    inline bool getline(rgl::sstream& stream, rgl::string& line) {
         line.clear();
         if (stream.isAtEnd()) return false;
         
@@ -82,4 +74,5 @@ namespace rgl {
         }
         return true;
     }
+
 }

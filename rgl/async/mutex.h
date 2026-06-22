@@ -24,7 +24,7 @@
 
 namespace rgl {
 
-    class mutex {
+    class mutex final{
     public:
         using native_handle_type = pthread_mutex_t*;
 
@@ -55,7 +55,7 @@ namespace rgl {
         pthread_mutex_t mutex_;
     };
 
-    class condition_variable {
+    class condition_variable final {
     public:
         using native_handle_type = pthread_cond_t*;
 

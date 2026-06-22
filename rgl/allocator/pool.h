@@ -20,12 +20,13 @@
 //pool
 #pragma once
 
-#include "../types.h"
-#include "../algorithm.h"
+#include "../core/types.h"
+#include "../mem/new.h"
+#include "../algorithm/algorithm.h"
 
 namespace rgl{
 	template<typename T>
-	class PoolAllocator{
+	class PoolAllocator final{
 		struct Node{ Node* next; };
 
 		size_t m_blockSize;

@@ -22,7 +22,7 @@
 
 namespace rgl {
 
-    enum class memory_order : int {
+    enum class memory_order : unsigned char {
         relaxed,
         consume,
         acquire,
@@ -39,7 +39,7 @@ namespace rgl {
     inline constexpr memory_order memory_order_seq_cst = memory_order::seq_cst;
 
     template<typename T>
-    class atomic {
+    class alignas(sizeof(T)) atomic final{
     private:
         T value_;
 

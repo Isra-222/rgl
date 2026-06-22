@@ -67,6 +67,44 @@ namespace rgl {
         }
         return negative ? -val : val;
     }
+    inline int double_to_buffer(char* buf, double d) {
+        int pos = 0;
+        
+        if (d < 0) {
+            buf[pos++] = '-';
+            d = -d;
+        }
+
+        long long int_part = static_cast<long long>(d);
+        double frac_part = d - int_part;
+        
+        if (int_part == 0) {
+            buf[pos++] = '0';
+        } else {
+            char temp[32];
+            int temp_pos = 0;
+            while (int_part > 0) {
+                temp[temp_pos++] = (int_part % 10) + '0';
+                int_part /= 10;
+            }
+            while (temp_pos > 0) {
+                buf[pos++] = temp[--temp_pos];
+            }
+        }
+
+        buf[pos++] = '.';
+
+        for (int i = 0; i < 6; ++i) { 
+            frac_part *= 10;
+            int digit = static_cast<int>(frac_part);
+            buf[pos++] = digit + '0';
+            frac_part -= digit;
+            if (frac_part < 0.000001) break;
+        }
+        
+        buf[pos] = '\0';
+        return pos;
+    }
 
     inline long long stoll(const string& str) {
         return atoll_custom(str.c_str());
@@ -239,39 +277,7 @@ namespace rgl {
 
     inline string to_string(double d) {
         char buf[64];
-        int pos = 0;
-        if (d < 0) {
-            buf[pos++] = '-';
-            d = -d;
-        }
-        
-        long long int_part = static_cast<long long>(d);
-        double frac_part = d - int_part;
-        
-        if (int_part == 0) {
-            buf[pos++] = '0';
-        } else {
-            char temp[32];
-            int temp_pos = 0;
-            while (int_part > 0) {
-                temp[temp_pos++] = (int_part % 10) + '0';
-                int_part /= 10;
-            }
-            for (int i = temp_pos - 1; i >= 0; --i) {
-                buf[pos++] = temp[i];
-            }
-        }
-
-        buf[pos++] = '.';
-        for (int i = 0; i < 6; ++i) { 
-            frac_part *= 10;
-            int digit = static_cast<int>(frac_part);
-            buf[pos++] = digit + '0';
-            frac_part -= digit;
-            if (frac_part < 0.000001) break;
-        }
-        
-        buf[pos] = '\0';
+        double_to_buffer(buf, d);
         return string(buf);
     }
 

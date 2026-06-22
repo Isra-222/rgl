@@ -19,10 +19,10 @@
 //map
 #pragma once
 
-#include "new.h"
-#include "utility.h"
-#include "hash.h"
-#include "string.h"
+#include "../mem/new.h"
+#include "../core/utility.h"
+#include "../core/hash.h"
+#include "../string/string.h"
 
 namespace rgl {
 
@@ -33,22 +33,26 @@ inline size_t next_power_of_two(size_t n) {
     return ++n;
 }
 
-template <typename T>
-struct default_hasher {
-    inline uint64_t operator()(const T& key, uint64_t seed) const {
-        if constexpr (is_same_v<T, rgl::string>) {
-            return wyhash(reinterpret_cast<const uint8_t*>(key.c_str()), key.size(), seed);
-        } else if constexpr (is_same_v<T, string_view>) {
-            return wyhash(reinterpret_cast<const uint8_t*>(key.data()), key.size(), seed);
-        } else {
-            return wyhash(reinterpret_cast<const uint8_t*>(&key), sizeof(T), seed);
+    template <typename T>
+    struct default_hasher {
+        inline uint64_t operator()(const T& key, uint64_t seed) const {
+            if constexpr (rgl::is_arithmetic_v<T> || rgl::is_pointer_v<T>) {
+                return wyhash(reinterpret_cast<const uint8_t*>(&key), sizeof(T), seed);
+            }
+            else if constexpr (rgl::is_same_v<T, const char*> || rgl::is_same_v<T, char*>) {
+                size_t len = 0;
+                while (key[len] != '\0') len++;
+                return wyhash(reinterpret_cast<const uint8_t*>(key), len, seed);
+            }
+            else {
+                return wyhash(reinterpret_cast<const uint8_t*>(key.data()), key.size(), seed);
+            }
         }
-    }
-};
+    };
+
 
 template<typename K, typename V, typename Hasher = default_hasher<K>>
-class map {
-private:
+class map final{
     enum State : uint8_t { EMPTY = 0, OCCUPIED = 1, DELETED = 2 };
 
     struct Entry {
@@ -292,6 +296,41 @@ public:
         bool operator!=(const const_iterator& other) const { return current != other.current; }
     };
     
+    const_iterator find(const K& key) const {
+        if (table_size == 0) return end();
+        
+        uint64_t h = hash_func(key, seed);
+        size_t mask = table_size - 1;
+        size_t idx = h & mask;
+        size_t start_idx = idx;
+
+        while (table[idx].state != EMPTY) {
+            if (table[idx].state == OCCUPIED && table[idx].key == key) {
+                return const_iterator(&table[idx], table + table_size);
+            }
+            idx = (idx + 1) & mask;
+            if (idx == start_idx) break;
+        }
+        return end();
+    }
+    iterator find(const K& key) {
+        if (table_size == 0) return end();
+        
+        uint64_t h = hash_func(key, seed);
+        size_t mask = table_size - 1;
+        size_t idx = h & mask;
+        size_t start_idx = idx;
+
+        while (table[idx].state != EMPTY) {
+            if (table[idx].state == OCCUPIED && table[idx].key == key) {
+                return iterator(&table[idx], table + table_size);
+            }
+            idx = (idx + 1) & mask;
+            if (idx == start_idx) break;
+        }
+        return end();
+    }
+
     const_iterator begin() const { return const_iterator(table, table + table_size); }
     const_iterator end() const { return const_iterator(table + table_size, table + table_size); }
 };

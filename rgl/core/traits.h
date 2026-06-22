@@ -98,4 +98,30 @@ namespace rgl {
 
     template<typename T>
     inline constexpr bool is_default_constructible_v = is_default_constructible<T>::value;
+
+    template<typename T> struct is_arithmetic : false_type {};
+
+    template<> struct is_arithmetic<bool> : true_type {};
+    template<> struct is_arithmetic<char> : true_type {};
+    template<> struct is_arithmetic<signed char> : true_type {};
+    template<> struct is_arithmetic<unsigned char> : true_type {};
+    template<> struct is_arithmetic<short> : true_type {};
+    template<> struct is_arithmetic<unsigned short> : true_type {};
+    template<> struct is_arithmetic<int> : true_type {};
+    template<> struct is_arithmetic<unsigned int> : true_type {};
+    template<> struct is_arithmetic<long> : true_type {};
+    template<> struct is_arithmetic<unsigned long> : true_type {};
+    template<> struct is_arithmetic<long long> : true_type {};
+    template<> struct is_arithmetic<unsigned long long> : true_type {};
+    template<> struct is_arithmetic<float> : true_type {};
+    template<> struct is_arithmetic<double> : true_type {};
+    template<> struct is_arithmetic<long double> : true_type {};
+
+    template<typename T>
+    inline constexpr bool is_arithmetic_v = is_arithmetic<remove_cv_t<T>>::value;
+    template<typename T> struct is_pointer : false_type {};
+    template<typename T> struct is_pointer<T*> : true_type {};
+    
+    template<typename T>
+    inline constexpr bool is_pointer_v = is_pointer<remove_cv_t<T>>::value;
 }
