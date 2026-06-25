@@ -20,7 +20,7 @@
 //algorithm
 
 #pragma once
-#include "../core/utility.h"
+#include "rgl/core/utility/move.h"
 
 namespace rgl {
 
@@ -42,7 +42,7 @@ namespace rgl {
             while (*i < pivot) ++i;
             while (*j > pivot) --j;
             if (i <= j) {
-                rgl::swap(*i, *j);
+                swap(*i, *j);
                 ++i; --j;
             }
         }
@@ -54,7 +54,7 @@ namespace rgl {
     void rotate(Iterator first, Iterator middle, Iterator last) {
         auto next = middle;
         while (first != next) {
-            rgl::swap(*first++, *next++);
+            swap(*first++, *next++);
             if (next == last) next = middle;
             else if (first == middle) middle = next;
         }

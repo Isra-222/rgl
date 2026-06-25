@@ -18,75 +18,31 @@
 */
 
 //ifstream
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#pragma once
+#include "rgl/string/string.h"
 
-#include "string.h"
-
-namespace rgl{
-
-    class ifstream final{
-        char* data_ptr = nullptr;
+namespace rgl {
+    class ifstream final {
+        void* data_ptr = nullptr;
         size_t file_size = 0;
         size_t cursor = 0;
 
     public:
-        ifstream(const rgl::string& path) {
-            int fd = ::open(path.c_str(), O_RDONLY);
-            if (fd == -1) return;
+        explicit ifstream(const rgl::string& path);
+        ~ifstream();
 
-            struct stat st;
-            if (::fstat(fd, &st) == -1) {
-                ::close(fd);
-                return;
-            }
-            
-            file_size = static_cast<size_t>(st.st_size);
-            data_ptr = static_cast<char*>(::mmap(nullptr, file_size, PROT_READ, MAP_PRIVATE, fd, 0));
-            
-            if (data_ptr == MAP_FAILED) {
-                data_ptr = nullptr;
-                file_size = 0;
-            }
-            ::close(fd);
-        }
-
-        ~ifstream() {
-            if (data_ptr) {
-                munmap(data_ptr, file_size);
-            }
-        }
-
-        void close() {
-            if (data_ptr != nullptr) {
-                munmap(data_ptr, file_size);
-                data_ptr = nullptr;
-                file_size = 0;
-                cursor = 0;
-            }
-        }
-
-        char peek() const { return (cursor < file_size) ? data_ptr[cursor] : '\0'; }
-        void advance() { if (cursor < file_size) cursor++; }
-        bool isAtEnd() const { return cursor >= file_size; }
-        bool isOpen() const { return data_ptr != nullptr; }
-    };
-    inline bool getline(rgl::ifstream& stream, rgl::string& line) {
-        if (stream.isAtEnd()) return false;
+        ifstream(const ifstream&) = delete;
+        ifstream& operator=(const ifstream&) = delete;
         
-        line.clear();
-        bool found = false;
-        while (!stream.isAtEnd()) {
-            char c = stream.peek();
-            stream.advance();
-            if (c == '\n') {
-                found = true;
-                break;
-            }
-            if (c != '\r') line += c;
-        }
-        return found || !line.empty(); 
-    }
+        ifstream(ifstream&& other) noexcept;
+        ifstream& operator=(ifstream&& other) noexcept;
+
+        void close();
+        char peek() const;
+        void advance();
+        bool isAtEnd() const;
+        bool isOpen() const;
+    };
+
+    bool getline(rgl::ifstream& stream, rgl::string& line);
 }

@@ -17,39 +17,25 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-//linear
+//pair.h
 #pragma once
-
-#include "rgl/core/types.h"
-#include "rgl/memory/new.h"
+#include "rgl/core/utility/move.h"
+#include "rgl/core/utility/tuple.h"
 
 namespace rgl {
-	class linearAllocator final{
-		uint8_t* m_begin;
-		uint8_t* m_current;
-		size_t m_capacity;
-	public:
-		linearAllocator(size_t s)
-		: m_begin(nullptr), m_current(nullptr), m_capacity(s){
-			m_begin = reinterpret_cast<uint8_t*>(::operator new[](m_capacity));
-			m_current = m_begin;
-		}
-		~linearAllocator(){
-			::operator delete[](m_begin);
-			m_begin = nullptr;
-			m_current = nullptr;
-		}
+    template<typename T1, typename T2>
+    class pair {
+    public:
+        T1 first;
+        T2 second;
+        constexpr pair() : first(), second() {}
+        constexpr pair(const T1& a, const T2& b) : first(a), second(b) {}
+        template<typename U1, typename U2>
+        constexpr pair(U1&& a, U2&& b) : first(rgl::move(a)), second(rgl::move(b)) {}
+    };
 
-		template<typename T>
-		T* push(size_t bytes){
-			if(m_current + bytes > m_begin + m_capacity) return nullptr;
-			
-			T* ptr = reinterpret_cast<T*>(m_current);
-			m_current += bytes;
-			return ptr;
-		}
-		void reset(){
-			m_current = m_begin;
-		}
-	};
-}//namespace rgl
+    template<typename T1, typename T2>
+    constexpr pair<decay_t<T1>, decay_t<T2>> make_pair(T1&& a, T2&& b) {
+        return pair<decay_t<T1>, decay_t<T2>>(forward<T1>(a), forward<T2>(b));
+    }
+}

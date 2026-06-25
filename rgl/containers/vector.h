@@ -20,9 +20,9 @@
 //vector
 #pragma once
 
-#include "../core/types.h"
-#include "../core/utility.h"
-#include "../mem/new.h"
+#include "rgl/core/types.h"
+#include "rgl/core/utility/move.h"
+#include "rgl/memory/new.h"
 
 namespace rgl {
 	template<typename T>
@@ -35,7 +35,7 @@ namespace rgl {
             T* tmp = static_cast<T*>(::operator new[](qty * sizeof(T)));
             
             for(size_t i = 0; i < _size; ++i) {
-                new (&tmp[i]) T(rgl::move(ptr[i]));
+                new (&tmp[i]) T(move(ptr[i]));
                 ptr[i].~T();
             }
 
@@ -87,7 +87,7 @@ namespace rgl {
 		    if (_size == _capacity) {
 		        reserve(_capacity == 0 ? 1 : _capacity * 2);
 		    }
-			new (&ptr[_size]) T(rgl::move(value));
+			new (&ptr[_size]) T(move(value));
 			_size++;
 		}
 		void reserve(size_t s){

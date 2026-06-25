@@ -7,7 +7,7 @@
 #define __NEW__
 #define _GLIBCXX_NEW
 
-#include "../core/types.h"
+#include "rgl/core/types.h"
 
 extern "C" {
     void* malloc(rgl::size_t size);

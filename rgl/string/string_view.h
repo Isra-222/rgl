@@ -21,32 +21,11 @@
 
 #pragma once
 
-#include "../core/types.h"
+#include "rgl/core/hash.h"
+#include "rgl/core/types.h"
+#include "rgl/core/utility/memory.h"
 
 namespace rgl {
-    inline size_t strlen(const char* str){
-        const char* s = str;
-        while(*s){
-            s++;
-        }
-        return static_cast<size_t>(s - str);
-    }
-
-    inline bool is_space(char c) {
-        return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r';
-    }
-
-    inline bool is_alpha(char c) {
-        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-    }
-
-    inline bool is_digit(char c) {
-        return c >= '0' && c <= '9';
-    }
-
-    inline bool is_alnum(char c) {
-        return is_alpha(c) || is_digit(c);
-    }
 
     class string_view{
         const char* ptr;
@@ -63,5 +42,10 @@ namespace rgl {
         operator bool() const { return ptr != nullptr && len > 0; }
     };
 
-
+    template <>
+    struct hasher<rgl::string_view> {
+        inline uint64_t operator()(const rgl::string_view& key, uint64_t seed) const {
+            return wyhash(reinterpret_cast<const uint8_t*>(key.data()), key.size(), seed);
+        }
+    };
 }//namespace rgl

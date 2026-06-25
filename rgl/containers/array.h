@@ -18,38 +18,39 @@
 */
 //array
 #pragma once
+#include "rgl/core/types.h"
 
-namespace rgl{
-	template<typename T, size_t N>
-	class array{
-		T data[N];
-	public:
-		constexpr size_t size() const { return N; }
-		T& operator[](size_t index){ return data[index]; }
-		const T& operator[](size_t index) const { return data[index]; }
+namespace rgl {
+    template<typename T, size_t N>
+    class array {
+        T data[N];
+    public:
+        constexpr size_t size() const { return N; }
 
-		using iterator = T*;
-		using const_iterator = const T*;
+        constexpr T& operator[](size_t index) { return data[index]; }
+        constexpr const T& operator[](size_t index) const { return data[index]; }
 
-		iterator begin() { return data; }
-    	iterator end() { return data + N; }
+        using iterator = T*;
+        using const_iterator = const T*;
 
-    	const_iterator begin() const { return data; }
-    	const_iterator end() const { return data + N; }
+        constexpr iterator begin() { return data; }
+        constexpr iterator end() { return data + N; }
 
-    	bool operator==(const array& other) const {
-	        for (size_t i = 0; i < N; ++i) {
-	            if (data[i] != other.data[i]) {
-	                return false;
-	            }
-	        }
-	        return true;
-	    }
+        constexpr const_iterator begin() const { return data; }
+        constexpr const_iterator end() const { return data + N; }
 
-	    bool operator!=(const array& other) const {
-	        return !(*this == other);
-	    }
+        constexpr bool operator==(const array& other) const {
+            for (size_t i = 0; i < N; ++i) {
+                if (data[i] != other.data[i]) return false;
+            }
+            return true;
+        }
 
-    	T* data_ptr() { return data;}
-	};
+        constexpr bool operator!=(const array& other) const {
+            return !(*this == other);
+        }
+
+        constexpr T* data_ptr() { return data; }
+        constexpr const T* data_ptr() const { return data; }
+    };
 }

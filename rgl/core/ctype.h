@@ -17,39 +17,23 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-//linear
+//ctype.h
 #pragma once
 
-#include "rgl/core/types.h"
-#include "rgl/memory/new.h"
+namespace rgl{
+	inline bool is_space(char c) {
+        return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r';
+    }
 
-namespace rgl {
-	class linearAllocator final{
-		uint8_t* m_begin;
-		uint8_t* m_current;
-		size_t m_capacity;
-	public:
-		linearAllocator(size_t s)
-		: m_begin(nullptr), m_current(nullptr), m_capacity(s){
-			m_begin = reinterpret_cast<uint8_t*>(::operator new[](m_capacity));
-			m_current = m_begin;
-		}
-		~linearAllocator(){
-			::operator delete[](m_begin);
-			m_begin = nullptr;
-			m_current = nullptr;
-		}
+    inline bool is_alpha(char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    }
 
-		template<typename T>
-		T* push(size_t bytes){
-			if(m_current + bytes > m_begin + m_capacity) return nullptr;
-			
-			T* ptr = reinterpret_cast<T*>(m_current);
-			m_current += bytes;
-			return ptr;
-		}
-		void reset(){
-			m_current = m_begin;
-		}
-	};
-}//namespace rgl
+    inline bool is_digit(char c) {
+        return c >= '0' && c <= '9';
+    }
+
+    inline bool is_alnum(char c) {
+        return is_alpha(c) || is_digit(c);
+    }
+}

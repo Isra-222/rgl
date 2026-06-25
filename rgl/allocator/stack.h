@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include "../core/types.h"
-#include "../mem/new.h"
+#include "rgl/core/types.h"
+#include "rgl/memory/new.h"
 
 namespace rgl {
 	

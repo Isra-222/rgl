@@ -1,0 +1,10 @@
+build/
+
+CMakeCache.txt
+CMakeFiles/
+Makefile
+*.cmake
+compile_commands.json
+
+.vscode/
+.idea/

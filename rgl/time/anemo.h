@@ -20,7 +20,7 @@
 #pragma once 
 
 #include <time.h>
-#include "../math/math.h"
+#include "rgl/math/math.h"
 
 namespace rgl::anemo {
     

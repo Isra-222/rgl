@@ -20,9 +20,9 @@
 //pool
 #pragma once
 
-#include "../core/types.h"
-#include "../mem/new.h"
-#include "../algorithm/algorithm.h"
+#include "rgl/core/types.h"
+#include "rgl/memory/new.h"
+#include "rgl/algorithm/algorithm.h"
 
 namespace rgl{
 	template<typename T>

@@ -20,9 +20,9 @@
 //smallVector
 #pragma once
 
-#include "../core/types.h"
-#include "../core/utility.h"
-#include "../mem/new.h"
+#include "rgl/core/types.h"
+#include "rgl/core/utility/move.h"
+#include "rgl/memory/new.h"
 
 namespace rgl{
 	template<typename T, size_t N>
@@ -61,7 +61,7 @@ namespace rgl{
                     _capacity = N;
                     _is_heap = false;
                     for(size_t i = 0; i < other._size; ++i) {
-                        new (_ptr + i) T(rgl::move(other._ptr[i]));
+                        new (_ptr + i) T(move(other._ptr[i]));
                         other._ptr[i].~T();
                     }
                 }
@@ -78,7 +78,7 @@ namespace rgl{
 		        _is_heap = false;
 		        _ptr = stack_ptr();
 		        for(size_t i = 0; i < _size; ++i) {
-		            new (_ptr + i) T(rgl::move(other._ptr[i]));
+		            new (_ptr + i) T(move(other._ptr[i]));
 		            other._ptr[i].~T();
 		        }
 		    } else {
@@ -104,7 +104,7 @@ namespace rgl{
 	        T* new_ptr = static_cast<T*>(::operator new[](new_capacity * sizeof(T)));
 
 	        for (size_t i = 0; i < _size; ++i) {
-	            new (new_ptr + i) T(rgl::move(_ptr[i]));
+	            new (new_ptr + i) T(move(_ptr[i]));
 	            _ptr[i].~T();
 	        }
 

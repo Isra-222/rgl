@@ -17,39 +17,26 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-//linear
+//pass.h
 #pragma once
 
-#include "rgl/core/types.h"
-#include "rgl/memory/new.h"
-
-namespace rgl {
-	class linearAllocator final{
-		uint8_t* m_begin;
-		uint8_t* m_current;
-		size_t m_capacity;
-	public:
-		linearAllocator(size_t s)
-		: m_begin(nullptr), m_current(nullptr), m_capacity(s){
-			m_begin = reinterpret_cast<uint8_t*>(::operator new[](m_capacity));
-			m_current = m_begin;
-		}
-		~linearAllocator(){
-			::operator delete[](m_begin);
-			m_begin = nullptr;
-			m_current = nullptr;
-		}
-
-		template<typename T>
-		T* push(size_t bytes){
-			if(m_current + bytes > m_begin + m_capacity) return nullptr;
-			
-			T* ptr = reinterpret_cast<T*>(m_current);
-			m_current += bytes;
-			return ptr;
-		}
-		void reset(){
-			m_current = m_begin;
-		}
-	};
-}//namespace rgl
+namespace rgl{
+	inline void pass(){
+		#if defined(__x86_64__) || defined(_M_X64)
+        __asm__ volatile ("nop");
+		#elif defined(__aarch64__)
+		        __asm__ volatile ("nop");
+		#else
+		    ((void)0)
+		#endif
+	}
+	inline void relax(){
+		#if defined(__x86_64__) || defined(_M_X64)
+        __asm__ volatile ("pause");
+		#elif defined(__aarch64__)
+		        __asm__ volatile ("yield");
+		#else
+			((void)0)
+		#endif
+	}
+}

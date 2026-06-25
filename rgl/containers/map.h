@@ -19,10 +19,9 @@
 //map
 #pragma once
 
-#include "../mem/new.h"
-#include "../core/utility.h"
-#include "../core/hash.h"
-#include "../string/string.h"
+#include "rgl/memory/new.h"
+#include "rgl/core/hash.h"
+#include "rgl/core/utility/pair.h"
 
 namespace rgl {
 
@@ -33,31 +32,17 @@ inline size_t next_power_of_two(size_t n) {
     return ++n;
 }
 
-    template <typename T>
-    struct default_hasher {
-        inline uint64_t operator()(const T& key, uint64_t seed) const {
-            if constexpr (rgl::is_arithmetic_v<T> || rgl::is_pointer_v<T>) {
-                return wyhash(reinterpret_cast<const uint8_t*>(&key), sizeof(T), seed);
-            }
-            else if constexpr (rgl::is_same_v<T, const char*> || rgl::is_same_v<T, char*>) {
-                size_t len = 0;
-                while (key[len] != '\0') len++;
-                return wyhash(reinterpret_cast<const uint8_t*>(key), len, seed);
-            }
-            else {
-                return wyhash(reinterpret_cast<const uint8_t*>(key.data()), key.size(), seed);
-            }
-        }
-    };
 
-
-template<typename K, typename V, typename Hasher = default_hasher<K>>
+template<typename K, typename V, typename Hasher = hasher<K>>
 class map final{
+public:
+    using value_type = rgl::pair<const K, V>;
+private:
     enum State : uint8_t { EMPTY = 0, OCCUPIED = 1, DELETED = 2 };
 
+
     struct Entry {
-        K key;
-        V value;
+        value_type data;
         State state = EMPTY;
     };
 
@@ -74,15 +59,22 @@ class map final{
         size_t old_size = table_size;
 
         table_size = new_size;
-        table = new Entry[table_size];
+        table = (Entry*)::operator new[](table_size * sizeof(Entry));
+
+        for (size_t i = 0; i < table_size; ++i) {
+            table[i].state = EMPTY;
+        }
+
         element_count = 0;
 
         for (size_t i = 0; i < old_size; ++i) {
             if (old_table[i].state == OCCUPIED) { 
-                insert(rgl::move(old_table[i].key), rgl::move(old_table[i].value));
+                insert(rgl::move(old_table[i].data.first), rgl::move(old_table[i].data.second));
+                old_table[i].data.~value_type();
             }
         }
-        delete[] old_table;
+
+        ::operator delete[](old_table);
     }
 
 public:
@@ -103,25 +95,31 @@ public:
             return *this;
         }
 
-        Entry& operator*() const { return *current; }
-        Entry* operator->() const { return current; }
+        value_type* operator->() const { return &current->data; }
+        value_type& operator*() const { return current->data; }
 
         bool operator!=(const iterator& other) const { return current != other.current; }
     };
 
     map(size_t cap = 16) {
         table_size = next_power_of_two(cap);
-        table = new Entry[table_size];
+        table = (Entry*)::operator new[](table_size * sizeof(Entry));
+        
+        for (size_t i = 0; i < table_size; ++i) {
+            table[i].state = EMPTY;
+        }
     }
 
     map(const map& other) : table_size(other.table_size), element_count(other.element_count), 
                             seed(other.seed), hash_func(other.hash_func) {
-        table = new Entry[table_size];
+        table = (Entry*)::operator new[](table_size * sizeof(Entry));
+
         for (size_t i = 0; i < table_size; ++i) {
             if (other.table[i].state == OCCUPIED) {
-                table[i].key = other.table[i].key;
-                table[i].value = other.table[i].value;
+                new (&table[i].data) value_type(other.table[i].data);
                 table[i].state = OCCUPIED;
+            } else {
+                table[i].state = EMPTY;
             }
         }
     }
@@ -147,8 +145,13 @@ public:
         return *this;
     }
 
-    ~map() { 
-        delete[] table; 
+    ~map() {
+        for(size_t i = 0; i < table_size; ++i) {
+            if (table[i].state == OCCUPIED) {
+                table[i].data.~value_type();
+            }
+        }
+        ::operator delete[](table);
     }
 
     void swap(map& other) noexcept {
@@ -166,8 +169,15 @@ public:
         element_count = 0;
     }
 
-    void insert(K key, V value) {
-        emplace(rgl::move(key), rgl::move(value));
+    rgl::pair<iterator, bool> insert(K key, V value) {
+        return emplace(rgl::move(key), rgl::move(value));
+    }
+
+    rgl::pair<iterator, bool> insert(const value_type& val) {
+        return emplace(val.first, val.second);
+    }
+    size_t count(const K& key) const {
+        return contains(key) ? 1 : 0;
     }
 
     V* get(const K& key) {
@@ -177,8 +187,8 @@ public:
         size_t idx = h & mask;
 
         while (table[idx].state != EMPTY) {
-            if (table[idx].state == OCCUPIED && table[idx].key == key) 
-                return &table[idx].value;
+            if (table[idx].state == OCCUPIED && table[idx].data.first == key) 
+                return &table[idx].data.second;
             idx = (idx + 1) & mask;
         }
         return nullptr;
@@ -192,7 +202,7 @@ public:
         size_t idx = h & mask;
 
         while (table[idx].state != EMPTY) {
-            if (table[idx].state == OCCUPIED && table[idx].key == key) {
+            if (table[idx].state == OCCUPIED && table[idx].data.first == key) {
                 table[idx].state = DELETED;
                 element_count--;
                 return true;
@@ -210,7 +220,7 @@ public:
         size_t idx = h & mask;
 
         while (table[idx].state != EMPTY) {
-            if (table[idx].state == OCCUPIED && table[idx].key == key) 
+            if (table[idx].state == OCCUPIED && table[idx].data.first == key) 
                 return true;
             idx = (idx + 1) & mask;
         }
@@ -218,7 +228,7 @@ public:
     }
 
     template<typename... Args>
-    void emplace(K key, Args&&... args) {
+    pair<iterator, bool> emplace(K key, Args&&... args) {
         if ((float)(element_count + 1) / table_size > MAX_LOAD_FACTOR) {
             rehash(table_size * 2);
         }
@@ -226,34 +236,33 @@ public:
         uint64_t h = hash_func(key, seed);
         size_t mask = table_size - 1;
         size_t idx = h & mask;
-
-        while (table[idx].state == OCCUPIED) {
-            if (table[idx].key == key) {
-                table[idx].value = V(rgl::forward<Args>(args)...);
-                return;
-            }
-            idx = (idx + 1) & mask;
-        }
-
         size_t first_deleted = table_size;
         size_t start_idx = idx;
-        
+
         while (table[idx].state != EMPTY) {
-            if (table[idx].state == DELETED && first_deleted == table_size) {
+            if (table[idx].state == OCCUPIED) {
+                if (table[idx].data.first == key) {
+                    table[idx].data.second.~V();
+                    new (&table[idx].data.second) V(rgl::forward<Args>(args)...);
+                    return {iterator(&table[idx], table + table_size), false};
+                }
+            } else if (table[idx].state == DELETED && first_deleted == table_size) {
                 first_deleted = idx;
             }
+            
             idx = (idx + 1) & mask;
             if (idx == start_idx) break;
         }
-        
+
         if (first_deleted != table_size) {
             idx = first_deleted;
         }
-        
-        table[idx].key = rgl::move(key);
-        table[idx].value = V(rgl::forward<Args>(args)...);
+
+        new (&table[idx].data) value_type(rgl::move(key), V(rgl::forward<Args>(args)...));
         table[idx].state = OCCUPIED;
         element_count++;
+
+        return {iterator(&table[idx], table + table_size), true};
     }
 
     size_t size() const { return element_count; }
@@ -289,9 +298,10 @@ public:
             } while (current < end_ptr && current->state != OCCUPIED);
             return *this;
         }
-        
-        const Entry& operator*() const { return *current; }
-        const Entry* operator->() const { return current; }
+
+        const value_type& operator*() const { return current->data; }
+
+        const value_type* operator->() const { return &current->data; }
         
         bool operator!=(const const_iterator& other) const { return current != other.current; }
     };
@@ -305,7 +315,7 @@ public:
         size_t start_idx = idx;
 
         while (table[idx].state != EMPTY) {
-            if (table[idx].state == OCCUPIED && table[idx].key == key) {
+            if (table[idx].state == OCCUPIED && table[idx].data.first == key) {
                 return const_iterator(&table[idx], table + table_size);
             }
             idx = (idx + 1) & mask;
@@ -322,7 +332,7 @@ public:
         size_t start_idx = idx;
 
         while (table[idx].state != EMPTY) {
-            if (table[idx].state == OCCUPIED && table[idx].key == key) {
+            if (table[idx].state == OCCUPIED && table[idx].data.first == key) {
                 return iterator(&table[idx], table + table_size);
             }
             idx = (idx + 1) & mask;
@@ -333,6 +343,12 @@ public:
 
     const_iterator begin() const { return const_iterator(table, table + table_size); }
     const_iterator end() const { return const_iterator(table + table_size, table + table_size); }
+
+    using key_type = K;
+    using mapped_type = V;
+    using size_type = size_t;
+    using reference = V&;
+    using const_reference = const V&;
 };
 
 } // namespace rgl

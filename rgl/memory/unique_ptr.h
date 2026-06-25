@@ -21,7 +21,7 @@
 //memory
 #pragma once
 
-#include "../core/utility.h"
+#include "rgl/core/utility/move.h"
 #include "new.h"
 
 namespace rgl {

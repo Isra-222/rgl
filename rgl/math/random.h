@@ -47,9 +47,9 @@
 
 # pragma once
 
-#include "../core/types.h"
-#include "../containers/array.h"
-#include "../core/limits.h"
+#include "rgl/core/types.h"
+#include "rgl/containers/array.h"
+#include "rgl/core/limits.h"
 
 # if __has_cpp_attribute(nodiscard) >= 201907L
 #	define XOSHIROCPP_NODISCARD_CXX20 [[nodiscard]]

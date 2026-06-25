@@ -25,5 +25,6 @@
 
 namespace rgl{
     inline ostream out;
+    inline ostream err(2);
     inline istream in;
 }

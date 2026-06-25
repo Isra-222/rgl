@@ -77,16 +77,6 @@ namespace rgl {
     template<bool B, typename T = void> using enable_if_t = typename enable_if<B, T>::type;
 
     template<typename T>
-    constexpr T&& forward(remove_reference_t<T>& arg) noexcept {
-        return static_cast<T&&>(arg);
-    }
-    
-    template<typename T>
-    constexpr T&& forward(remove_reference_t<T>&& arg) noexcept {
-        return static_cast<T&&>(arg);
-    }
-
-    template<typename T>
     struct is_default_constructible {
         template<typename U, typename = decltype(U())>
         static true_type test(int);

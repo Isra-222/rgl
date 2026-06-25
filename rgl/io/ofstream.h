@@ -19,23 +19,13 @@
 
 //ofstream
 #pragma once
-
 #include "ostream.h"
-#include <fcntl.h>
-#include <unistd.h>
 
 namespace rgl {
     class ofstream : public ostream {
     public:
-        explicit ofstream(const char* path) 
-            : ostream(::open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644)) {
-        }
-
-        ~ofstream() {
-            if (fd != -1) {
-                ::close(fd);
-            }
-        }
+        explicit ofstream(const char* path);
+        ~ofstream() override;
 
         ofstream(const ofstream&) = delete;
         ofstream& operator=(const ofstream&) = delete;

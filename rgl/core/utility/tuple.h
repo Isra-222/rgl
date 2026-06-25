@@ -17,57 +17,14 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-//utility
+//tuple
 #pragma once
 
-#include "types.h"
-#include "traits.h"
+#include "rgl/core/types.h"
+#include "rgl/core/traits.h"
 
 namespace rgl {
 
-    template<typename T>
-    constexpr typename remove_reference<T>::type&& move(T&& arg) noexcept {
-        return static_cast<typename remove_reference<T>::type&&>(arg);
-    }
-
-    template<typename T>
-    void swap(T& a, T& b) {
-        T temp = move(a);
-        a = move(b);
-        b = move(temp);
-    }
-
-    template<typename T1, typename T2>
-    struct pair {
-        T1 first;
-        T2 second;
-
-        pair() : first(), second() {}
-        pair(const T1& a, const T2& b) : first(a), second(b) {}
-    };
-
-    inline void* memcpy(void* dest, const void* src, unsigned long count) {
-        char* d = static_cast<char*>(dest);
-        const char* s = static_cast<const char*>(src);
-        while (count--) {
-            *d++ = *s++;
-        }
-        return dest;
-    }
-
-    inline int memcmp(const void* ptr1, const void* ptr2, size_t count) {
-        const unsigned char* p1 = static_cast<const unsigned char*>(ptr1);
-        const unsigned char* p2 = static_cast<const unsigned char*>(ptr2);
-        
-        while (count--) {
-            if (*p1 != *p2) {
-                return (*p1 > *p2) ? 1 : -1;
-            }
-            p1++;
-            p2++;
-        }
-        return 0;
-    }
 
     template<size_t... Ints>
     struct index_sequence {

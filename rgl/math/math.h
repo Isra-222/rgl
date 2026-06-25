@@ -54,7 +54,7 @@ namespace rgl {
 
 
 	template<typename T = float>
-    class mat4 {
+    class alignas(16) mat4 {
     public:
         T m[16];
 
@@ -69,17 +69,23 @@ namespace rgl {
         inline const T& operator()(int row, int col) const { return m[row * 4 + col]; }
 
         mat4 operator*(const mat4& other) const {
-            mat4 result(false);
-            for (int row = 0; row < 4; ++row) {
-                for (int col = 0; col < 4; ++col) {
-                    T sum = 0;
-                    for (int k = 0; k < 4; ++k) {
-                        sum += (*this)(row, k) * other(k, col);
-                    }
-                    result(row, col) = sum;
+            mat4 res(false);
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < 4; j++) {
+                    res.m[i * 4 + j] = m[i * 4 + 0] * other.m[0 * 4 + j] +
+                                       m[i * 4 + 1] * other.m[1 * 4 + j] +
+                                       m[i * 4 + 2] * other.m[2 * 4 + j] +
+                                       m[i * 4 + 3] * other.m[3 * 4 + j];
                 }
             }
-            return result;
+            return res;
+        }
+        mat4 transpose() const {
+            mat4 res(false);
+            for (int i = 0; i < 4; ++i)
+                for (int j = 0; j < 4; ++j)
+                    res(j, i) = (*this)(i, j);
+            return res;
         }
     };
     

@@ -21,22 +21,24 @@
 #pragma once
 
 namespace rgl {
-    #if defined(__linux__)
-    [[noreturn]] inline void abort() noexcept {
-        asm volatile (
-            "mov $60, %%rax\n\t" // sys_exit
-            "mov $1, %%rdi\n\t"  // error code 1
-            "syscall"
-            : : : "rax", "rdi"
-        );
-        __builtin_unreachable();
-    }
-    #elif defined(_WIN32)
-    extern "C" __declspec(dllimport) void __stdcall ExitProcess(unsigned int uExitCode);
     
-    [[noreturn]] inline void abort() noexcept {
-        ExitProcess(1);
-        __builtin_unreachable();
-    }
-    #endif
+    struct source_location {
+        const char* file;
+        int line;
+        const char* function;
+    };
+
+    #define rgl_here rgl::source_location{__FILE__, __LINE__, __builtin_FUNCTION()}
+
+    [[noreturn]] void abort() noexcept;
+    [[noreturn]] void panic(const char* message, source_location loc = rgl_here);
+
+    [[noreturn]] void unreachable() noexcept;
+
+    #define rgl_assert(condition) \
+        do { \
+            if (!(condition)) { \
+                rgl::panic("Assert failed: " #condition); \
+            } \
+        } while(0)
 }

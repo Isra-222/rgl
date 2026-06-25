@@ -23,10 +23,10 @@
 #include <pthread.h>
 #include <sched.h>
 
-#include "../core/error.h"
-#include "../core/utility.h"
-#include "../core/types.h"
-#include "../time/anemo.h"
+#include "rgl/core/error.h"
+#include "rgl/core/utility/tuple.h"
+#include "rgl/core/types.h"
+#include "rgl/time/anemo.h"
 
 namespace rgl {
     class thread {

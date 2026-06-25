@@ -17,284 +17,37 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-//format
-
 #pragma once
 
 #include "string.h"
 
 namespace rgl {
-
-
-    inline double strtod(const char* str) {
-        double val = 0.0;
-        double divisor = 1.0;
-        bool negative = false;
-
-        if (*str == '-') {
-            negative = true;
-            str++;
-        }
-
-        while (is_digit(*str)) {
-            val = val * 10.0 + (*str - '0');
-            str++;
-        }
-
-        if (*str == '.') {
-            str++;
-            while (is_digit(*str)) {
-                val = val * 10.0 + (*str - '0');
-                divisor *= 10.0;
-                str++;
-            }
-        }
-
-        val /= divisor;
-        return negative ? -val : val;
-    }
-
-    inline long long atoll_custom(const char* str) {
-        long long val = 0;
-        bool negative = false;
-        if (*str == '-') {
-            negative = true;
-            str++;
-        }
-        while (*str && is_digit(*str)) {
-            val = val * 10 + (*str - '0');
-            str++;
-        }
-        return negative ? -val : val;
-    }
-    inline int double_to_buffer(char* buf, double d) {
-        int pos = 0;
-        
-        if (d < 0) {
-            buf[pos++] = '-';
-            d = -d;
-        }
-
-        long long int_part = static_cast<long long>(d);
-        double frac_part = d - int_part;
-        
-        if (int_part == 0) {
-            buf[pos++] = '0';
-        } else {
-            char temp[32];
-            int temp_pos = 0;
-            while (int_part > 0) {
-                temp[temp_pos++] = (int_part % 10) + '0';
-                int_part /= 10;
-            }
-            while (temp_pos > 0) {
-                buf[pos++] = temp[--temp_pos];
-            }
-        }
-
-        buf[pos++] = '.';
-
-        for (int i = 0; i < 6; ++i) { 
-            frac_part *= 10;
-            int digit = static_cast<int>(frac_part);
-            buf[pos++] = digit + '0';
-            frac_part -= digit;
-            if (frac_part < 0.000001) break;
-        }
-        
-        buf[pos] = '\0';
-        return pos;
-    }
-
-    inline long long stoll(const string& str) {
-        return atoll_custom(str.c_str());
-    }
-
-    inline int stoi(const string& str) {
-        return static_cast<int>(stoll(str));
-    }
-
-    inline double stod(const string& str) {
-        return strtod(str.c_str());
-    }
-
-
-    inline string ToString(int i) {
-        char buf[16];
-        int pos = 0;
-        bool negative = false;
-        
-        if (i == 0) {
-            buf[pos++] = '0';
-        } else {
-            if (i < 0) {
-                negative = true;
-                i = -i;
-            }
-            while (i > 0) {
-                buf[pos++] = (i % 10) + '0';
-                i /= 10;
-            }
-            if (negative) {
-                buf[pos++] = '-';
-            }
-        }
-        buf[pos] = '\0';
-
-        for (int j = 0; j < pos / 2; ++j) {
-            char temp = buf[j];
-            buf[j] = buf[pos - 1 - j];
-            buf[pos - 1 - j] = temp;
-        }
-        return string(buf);
-    }
+    double strtod(const char* str);
+    long double strtold(const char* str, char** endptr);
+    long long atoll_custom(const char* str);
+    int double_to_buffer(char* buf, double d);
     
-    inline string ToString(unsigned int i) {
-        char buf[16];
-        int pos = 0;
-        if (i == 0) buf[pos++] = '0';
-        while (i > 0) {
-            buf[pos++] = (i % 10) + '0';
-            i /= 10;
-        }
-        buf[pos] = '\0';
-        for (int j = 0; j < pos / 2; ++j) {
-            char temp = buf[j];
-            buf[j] = buf[pos - 1 - j];
-            buf[pos - 1 - j] = temp;
-        }
-        return string(buf);
-    }
-
-    inline string ToString(long long i) {
-        char buf[32];
-        int pos = 0;
-        bool negative = false;
-        
-        if (i == 0) {
-            buf[pos++] = '0';
-        } else {
-            if (i < 0) {
-                negative = true;
-                i = -i;
-            }
-            while (i > 0) {
-                buf[pos++] = (i % 10) + '0';
-                i /= 10;
-            }
-            if (negative) {
-                buf[pos++] = '-';
-            }
-        }
-        buf[pos] = '\0';
-
-        for (int j = 0; j < pos / 2; ++j) {
-            char temp = buf[j];
-            buf[j] = buf[pos - 1 - j];
-            buf[pos - 1 - j] = temp;
-        }
-        return string(buf);
-    }
-
-    inline string ToString(unsigned long long i) {
-        char buf[32];
-        int pos = 0;
-        if (i == 0) buf[pos++] = '0';
-        while (i > 0) {
-            buf[pos++] = (i % 10) + '0';
-            i /= 10;
-        }
-        buf[pos] = '\0';
-        for (int j = 0; j < pos / 2; ++j) {
-            char temp = buf[j];
-            buf[j] = buf[pos - 1 - j];
-            buf[pos - 1 - j] = temp;
-        }
-        return string(buf);
-    }
-
-    inline string to_string(const char* str) {
-        return string(str);
-    }
-
-    inline string to_string(const string& str) {
-        return str;
-    }
-
-    inline string to_string(char c) {
-        return string(1, c);
-    }
-
-    inline string to_string(int i) {
-        return ToString(i);
-    }
-
-    inline string to_string(unsigned int i) {
-        return ToString(i);
-    }
-
-    inline string to_string(long i) {
-        return ToString(static_cast<long long>(i));
-    }
-
-    inline string to_string(unsigned long i) {
-        char buf[32];
-        int pos = 0;
-        if (i == 0) buf[pos++] = '0';
-        while (i > 0) {
-            buf[pos++] = (i % 10) + '0';
-            i /= 10;
-        }
-        buf[pos] = '\0';
-        for (int j = 0; j < pos / 2; ++j) {
-            char temp = buf[j];
-            buf[j] = buf[pos - 1 - j];
-            buf[pos - 1 - j] = temp;
-        }
-        return string(buf);
-    }
-
-    inline string to_string(long long i) {
-        return ToString(i);
-    }
-
-    inline string to_string(unsigned long long i) {
-        char buf[32];
-        int pos = 0;
-        if (i == 0) buf[pos++] = '0';
-        while (i > 0) {
-            buf[pos++] = (i % 10) + '0';
-            i /= 10;
-        }
-        buf[pos] = '\0';
-        for (int j = 0; j < pos / 2; ++j) {
-            char temp = buf[j];
-            buf[j] = buf[pos - 1 - j];
-            buf[pos - 1 - j] = temp;
-        }
-        return string(buf);
-    }
-
-    inline string to_string(double d) {
-        char buf[64];
-        double_to_buffer(buf, d);
-        return string(buf);
-    }
-
-    inline string to_string(float f) {
-        return to_string(static_cast<double>(f));
-    }
-
-    inline string to_string(bool b) {
-        return b ? string("true") : string("false");
-    }
-
-    inline string to_string(void*) {
-        return string("nullptr");
-    }
-
+    inline long double stold(const string& str){ return strtold(str.c_str(), nullptr); }
+    long long stoll(const string& str);
+    int stoi(const string& str);
+    double stod(const string& str);
+    
+    string to_string(int i);
+    string to_string(unsigned int i);
+    string to_string(long i);
+    string to_string(unsigned long i);
+    string to_string(long long i);
+    string to_string(unsigned long long i);
+    string to_string(double d);
+    string to_string(float f);
+    string to_string(bool b);
+    string to_string(const char* str);
+    string to_string(const string& str);
+    string to_string(char c);
+    string to_string(void*);
+    
     template<typename T>
-    inline string to_string(T* ptr) {
+    string to_string(T* ptr) {
         if (ptr == nullptr) return string("nullptr");
         char buf[32];
         buf[0] = '0';

@@ -20,7 +20,7 @@
 //sstream
 #pragma once
 
-#include "../string/string.h"
+#include "rgl/string/string.h"
 
 namespace rgl {
 

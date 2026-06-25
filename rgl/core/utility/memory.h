@@ -17,39 +17,31 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-//linear
+//memory.h
 #pragma once
-
 #include "rgl/core/types.h"
-#include "rgl/memory/new.h"
 
 namespace rgl {
-	class linearAllocator final{
-		uint8_t* m_begin;
-		uint8_t* m_current;
-		size_t m_capacity;
-	public:
-		linearAllocator(size_t s)
-		: m_begin(nullptr), m_current(nullptr), m_capacity(s){
-			m_begin = reinterpret_cast<uint8_t*>(::operator new[](m_capacity));
-			m_current = m_begin;
-		}
-		~linearAllocator(){
-			::operator delete[](m_begin);
-			m_begin = nullptr;
-			m_current = nullptr;
-		}
+    inline void* memcpy(void* dest, const void* src, unsigned long count) {
+        char* d = static_cast<char*>(dest);
+        const char* s = static_cast<const char*>(src);
+        while (count--) { *d++ = *s++; }
+        return dest;
+    }
 
-		template<typename T>
-		T* push(size_t bytes){
-			if(m_current + bytes > m_begin + m_capacity) return nullptr;
-			
-			T* ptr = reinterpret_cast<T*>(m_current);
-			m_current += bytes;
-			return ptr;
-		}
-		void reset(){
-			m_current = m_begin;
-		}
-	};
-}//namespace rgl
+    inline size_t strlen(const char* str) {
+        const char* s = str;
+        while (*s) s++;
+        return static_cast<size_t>(s - str);
+    }
+
+    inline int memcmp(const void* ptr1, const void* ptr2, size_t count) {
+        const unsigned char* p1 = static_cast<const unsigned char*>(ptr1);
+        const unsigned char* p2 = static_cast<const unsigned char*>(ptr2);
+        while (count--) {
+            if (*p1 != *p2) return (*p1 > *p2) ? 1 : -1;
+            p1++; p2++;
+        }
+        return 0;
+    }
+}
