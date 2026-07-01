@@ -59,6 +59,28 @@ namespace rgl {
 		 	other._capacity = 0;
 		 	other.ptr = nullptr;
 		}
+		vector(const vector& other) : _size(other._size), _capacity(other._size) {
+		    ptr = _capacity > 0 ? static_cast<T*>(::operator new[](_capacity * sizeof(T))) : nullptr;
+		    for (size_t i = 0; i < _size; ++i) {
+		        new (&ptr[i]) T(other.ptr[i]);
+		    }
+		}
+
+		vector& operator=(const vector& other) {
+		    if (this != &other) {
+		        clear();
+		        if (_capacity < other._size) {
+		            ::operator delete[](ptr);
+		            _capacity = other._size;
+		            ptr = static_cast<T*>(::operator new[](_capacity * sizeof(T)));
+		        }
+		        for (size_t i = 0; i < other._size; ++i) {
+		            new (&ptr[i]) T(other.ptr[i]);
+		        }
+		        _size = other._size;
+		    }
+		    return *this;
+		}
 
 		vector& operator=(vector&& other) noexcept {
             if(this != &other) {
@@ -75,7 +97,6 @@ namespace rgl {
             }
             return *this;
         }
-		vector(const vector&) = delete;
 
 		void push_back(const T& value) {
             if (_size == _capacity) reserve(_capacity == 0 ? 1 : _capacity * 2);

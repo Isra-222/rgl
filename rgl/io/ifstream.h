@@ -19,16 +19,18 @@
 
 //ifstream
 #pragma once
-#include "rgl/string/string.h"
+
+#include "rgl/core/types.h"
 
 namespace rgl {
+    class string;
+
     class ifstream final {
         void* data_ptr = nullptr;
         size_t file_size = 0;
         size_t cursor = 0;
-
     public:
-        explicit ifstream(const rgl::string& path);
+        explicit ifstream(const string& path);
         ~ifstream();
 
         ifstream(const ifstream&) = delete;
@@ -42,7 +44,9 @@ namespace rgl {
         void advance();
         bool isAtEnd() const;
         bool isOpen() const;
+        const void* data() const { return data_ptr; }
+        size_t size() const { return file_size; }
     };
 
-    bool getline(rgl::ifstream& stream, rgl::string& line);
+    bool getline(ifstream& stream, string& line);
 }

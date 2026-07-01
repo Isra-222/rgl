@@ -22,7 +22,7 @@
 
 #include "rgl/core/types.h"
 #include "rgl/memory/new.h"
-#include "rgl/algorithm/algorithm.h"
+#include "rgl/algorithm/minmax.h"
 
 namespace rgl{
 	template<typename T>
@@ -36,7 +36,7 @@ namespace rgl{
 
 	public:
 		PoolAllocator(size_t amount)
-		: m_blockSize(max(sizeof(T), sizeof(Node)) )
+		: m_blockSize(algo::max(sizeof(T), sizeof(Node)) )
 		, m_numBlocks(amount), m_head(nullptr) {
 			m_memoryBuffer = ::operator new[](m_blockSize * m_numBlocks);
 			reset();

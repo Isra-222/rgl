@@ -20,6 +20,7 @@
 //ostream.cpp
 #include "rgl/io/ostream.h"
 #include "rgl/string/string.h"
+#include "rgl/string/string_view.h"
 #include "rgl/string/format.h"
 #include <unistd.h>
 
@@ -128,6 +129,10 @@ namespace rgl {
     
     ostream& ostream::operator<<(const rgl::string& str) {
         _write(str.c_str(), str.length());
+        return *this;
+    }
+    ostream& ostream::operator<<(const rgl::string_view& str){
+        _write(str.data(), str.size());
         return *this;
     }
     

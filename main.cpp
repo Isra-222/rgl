@@ -3,6 +3,13 @@
  * Copyright (C) 2026 [Isra-222]
 */
 
+#include "rgl/string/stringSwitch.h"
+
+#include "rgl/algorithm/minmax.h"
+#include "rgl/algorithm/search.h"
+#include "rgl/algorithm/sort.h"
+#include "rgl/algorithm/modifiers.h"
+
 #include "rgl/core/types.h"
 #include "rgl/allocator/pool.h"
 #include "rgl/allocator/linear.h"
@@ -20,11 +27,14 @@
 #include "rgl/memory/unique_ptr.h"
 #include "rgl/time/anemo.h"
 
+#include "rgl/math/calculus.h"
+#include "rgl/math/trig.h"
+
 void test_rgl_algorithms() {
     rgl::vector<int> v;
     v.push_back(10); v.push_back(20); v.push_back(30); v.push_back(40); v.push_back(50);
     
-    auto it = rgl::find(v.begin(), v.end(), 30);
+    auto it = rgl::algo::find(v.begin(), v.end(), 30);
     if (it != v.end()) {
         rgl::out << "Find: Element 30 found." << rgl::endl;
     }
@@ -33,7 +43,7 @@ void test_rgl_algorithms() {
     v2.push_back(5); v2.push_back(2); v2.push_back(9); 
     v2.push_back(1); v2.push_back(5); v2.push_back(6);
     
-    rgl::sort(v2.begin(), v2.end());
+    rgl::algo::sort(v2.begin(), v2.end());
     rgl::out << "Sort: ";
     for(size_t i = 0; i < v2.size(); ++i) rgl::out << v2[i] << " ";
     rgl::out << rgl::endl;
@@ -42,13 +52,13 @@ void test_rgl_algorithms() {
     v3.push_back(1); v3.push_back(2); v3.push_back(3); 
     v3.push_back(4); v3.push_back(5);
     
-    rgl::rotate(v3.begin(), v3.begin() + 2, v3.end());
+    rgl::algo::rotate(v3.begin(), v3.begin() + 2, v3.end());
     rgl::out << "Rotate (expected: 3,4,5,1,2): ";
     for(size_t i = 0; i < v3.size(); ++i) rgl::out << v3[i] << " ";
     rgl::out << rgl::endl;
 
-    rgl::out << "Max (10, 20): " << rgl::max(10, 20) << rgl::endl;
-    rgl::out << "Min (10, 20): " << rgl::min(10, 20) << rgl::endl;
+    rgl::out << "Max (10, 20): " << rgl::algo::max(10, 20) << rgl::endl;
+    rgl::out << "Min (10, 20): " << rgl::algo::min(10, 20) << rgl::endl;
 }
 
 struct TestObject { 
@@ -130,7 +140,7 @@ void test_math_and_random() {
     const float PI = 3.14159265f;
     float rad = 60.0f * (PI / 180.0f); // 60 degrees to radians
     
-    rgl::out << "Sin(60 degrees / 1.047 rad): " << rgl::sin(rad) << rgl::endl;
+    rgl::out << "Sin(60 degrees / 1.047 rad): " << rgl::math::sin(rad) << rgl::endl;
 }
 
 void test_random_features() {
@@ -158,6 +168,15 @@ void print_license_header() {
     rgl::out << "--------------------------------------------------" << rgl::endl;
 }
 
+int test_string_switch(rgl::string_view value){
+    return rgl::stringSwitch<int>(value)
+    .Case("a", 1)
+    .Case("ab", 2)
+    .Case("a", 3)
+    .Case("ccc", 8)
+    .Default(0);
+}
+
 int main() {
     print_license_header();
     auto start = rgl::anemo::steady_clock::now();
@@ -169,7 +188,9 @@ int main() {
     test_containers();
     test_math_and_random();
     test_random_features();
-    
+    int x = test_string_switch("noc");
+    rgl::out << "Value of x: " << x << rgl::endl;
+
     auto end = rgl::anemo::steady_clock::now();
     auto us = rgl::anemo::duration_cast<rgl::anemo::microseconds>(end - start);
 

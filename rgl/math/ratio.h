@@ -17,32 +17,20 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-//concepts
+//ratio.h
 #pragma once
 
-#include "traits.h"
+#include "utility.h"
 
-namespace rgl{
-	template<typename T>
-    struct is_simple_type : false_type {};
+namespace rgl::math{
+	template<ssize_t Num, ssize_t Den = 1>
+    struct ratio{
+        static_assert(Den != 0, "Error: Cannot divide by zero");
 
-    template<typename T, typename U>
-    concept same_as = is_same_v<T, U>;
+        static constexpr ssize_t divisor = gcd(Num, Den);
 
-    template<typename T, template<typename> class Trait>
-    concept satisfies = Trait<T>::value;
-
-    template<typename T>
-    concept DefaultConstructible = is_default_constructible_v<T>;
-
-    template<typename T>
-    concept SimpleType = is_simple_type<T>::value;
-
-    template<typename To, typename From>
-    concept Castable = requires(From& f) {
-        { isa<To>(f) } -> same_as<bool>; 
+        static constexpr ssize_t num = (Num / divisor) * ((Den < 0)? -1: 1);
+        static constexpr ssize_t den = (Den / divisor) * ((Den < 0)? -1: 1);
     };
 
-    template<typename B, typename D>
-    concept DerivedFrom = is_base_of_v<B, D>;
 }

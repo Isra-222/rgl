@@ -21,6 +21,7 @@
 //memory
 #pragma once
 
+#include "rgl/core/types.h"
 #include "rgl/core/utility/move.h"
 #include "new.h"
 
@@ -30,7 +31,19 @@ namespace rgl {
         T* ptr;
     public:
         explicit unique_ptr(T* p = nullptr) : ptr(p) {}
+        explicit unique_ptr(rgl::nullptr_t) : ptr(nullptr) {}
         ~unique_ptr() { delete ptr; }
+
+        template<typename U>
+        unique_ptr(unique_ptr<U>&& other) noexcept : ptr(other.release()) {}
+
+        template<typename U>
+        unique_ptr& operator=(unique_ptr<U>&& other) noexcept {
+            if (this != (unique_ptr*)&other) {
+                reset(other.release());
+            }
+            return *this;
+        }
 
         unique_ptr(const unique_ptr&) = delete;
         unique_ptr& operator=(const unique_ptr&) = delete;
@@ -46,6 +59,22 @@ namespace rgl {
         explicit operator bool() const noexcept {
             return ptr != nullptr;
         }
+        T* release() noexcept {
+            T* temp = ptr;
+            ptr = nullptr;
+            return temp;
+        }
+
+        void reset(T* p = nullptr) noexcept {
+            T* old_ptr = ptr;
+            ptr = p;
+            delete old_ptr;
+        }
+        void swap(unique_ptr& other) noexcept {
+            T* temp = ptr;
+            ptr = other.ptr;
+            other.ptr = temp;
+        }
     };
 
     template<typename T>
@@ -53,7 +82,20 @@ namespace rgl {
         T* ptr;
     public:
         explicit unique_ptr(T* p = nullptr) : ptr(p) {}
+        explicit unique_ptr(rgl::nullptr_t) : ptr(nullptr) {}
         ~unique_ptr() { delete[] ptr; }
+
+        template<typename U>
+        unique_ptr(unique_ptr<U>&& other) noexcept : ptr(other.release()) {}
+
+        template<typename U>
+        unique_ptr& operator=(unique_ptr<U>&& other) noexcept {
+            if (this != (unique_ptr*)&other) {
+                reset(other.release());
+            }
+            return *this;
+        }
+
 
         unique_ptr(const unique_ptr&) = delete;
         unique_ptr& operator=(const unique_ptr&) = delete;
@@ -69,14 +111,53 @@ namespace rgl {
         explicit operator bool() const noexcept {
             return ptr != nullptr;
         }
+        T* release() noexcept {
+            T* temp = ptr;
+            ptr = nullptr;
+            return temp;
+        }
+
+        void reset(T* p = nullptr) noexcept {
+            T* old_ptr = ptr;
+            ptr = p;
+            delete[] old_ptr;
+        }
+        void swap(unique_ptr& other) noexcept {
+            T* temp = ptr;
+            ptr = other.ptr;
+            other.ptr = temp;
+        }
     };
 
+    
     template<typename T, typename... Args>
     unique_ptr<T> make_unique(Args&&... args) {
-       return unique_ptr<T>(new T(rgl::forward<Args>(args)...));
+        return unique_ptr<T>(new T(rgl::forward<Args>(args)...));
     }
+
+    template<typename T, typename U, typename... Args>
+    unique_ptr<T> make_unique(Args&&... args) {
+        return unique_ptr<T>(new U(rgl::forward<Args>(args)...));
+    }
+
+
     template<typename T>
-    unique_ptr<T[]> make_unique(size_t size){
+    unique_ptr<T[]> make_unique(size_t size) {
         return unique_ptr<T[]>(new T[size]);
     }
-};
+
+    template<typename T>
+    bool operator==(const unique_ptr<T>& lhs, rgl::nullptr_t) noexcept { return !lhs; }
+
+    template<typename T>
+    bool operator!=(const unique_ptr<T>& lhs, rgl::nullptr_t) noexcept { return (bool)lhs; }
+
+    template<typename T>
+    bool operator==(rgl::nullptr_t, const unique_ptr<T>& rhs) noexcept { return !rhs; }
+
+    template<typename T>
+    void swap(unique_ptr<T>& a, unique_ptr<T>& b) noexcept {
+        a.swap(b);
+    }
+
+}

@@ -34,6 +34,11 @@ namespace rgl{
 	    bool _is_heap;
 
 	    T* stack_ptr() { return reinterpret_cast<T*>(_stack_buffer); }
+
+	    void reallocate() {
+	    	size_t next_capacity = (_capacity == N) ? (N * 2) : (_capacity * 2);
+    		reserve(next_capacity);
+	    }
 	public:
 	    smallVector() : _ptr(stack_ptr()), _size(0), _capacity(N), _is_heap(false) {}
 
@@ -44,8 +49,20 @@ namespace rgl{
 	        }
 	    }
 
-	    smallVector(const smallVector&) = delete;
-	    smallVector& operator=(const smallVector&) = delete;
+	    smallVector(const smallVector& other)
+	    : _size(0), _capacity(N), _is_heap(false) {
+	    	_ptr = stack_ptr();
+	    	for(size_t i = 0; i < other._size; ++i)
+	    		emplace_back(other[i]);
+	    }
+	    smallVector& operator=(const smallVector& other){
+	    	if(this != other){
+	    		clear();
+	    		for(size_t i = 0; i < other._size; ++i)
+	    			emplace_back(other[i]);
+	    	}
+	    	return *this;
+	    }
 
 	    smallVector& operator=(smallVector&& other) noexcept {
             if (this != &other) {
@@ -94,27 +111,9 @@ namespace rgl{
 		}
 
 	    void push_back(const T& value) {
-	        if (_size == _capacity) grow();
+	        if (_size == _capacity) reallocate();
 	        new (_ptr + _size) T(value);
 	        _size++;
-	    }
-
-	    void grow() {
-	        size_t new_capacity = _capacity * 2;
-	        T* new_ptr = static_cast<T*>(::operator new[](new_capacity * sizeof(T)));
-
-	        for (size_t i = 0; i < _size; ++i) {
-	            new (new_ptr + i) T(move(_ptr[i]));
-	            _ptr[i].~T();
-	        }
-
-	        if (_is_heap) {
-	            ::operator delete[](_ptr);
-	        }
-
-	        _ptr = new_ptr;
-	        _capacity = new_capacity;
-	        _is_heap = true;
 	    }
 
 		void clear() {
@@ -130,6 +129,40 @@ namespace rgl{
                 _is_heap = false;
             }
         }
+		bool empty() const { return _size == 0; }
+        
+        void pop_back() {
+            if (_size > 0) {
+                _ptr[--_size].~T();
+            }
+        }
+
+        template<typename... Args>
+        void emplace_back(Args&&... args) {
+            if (_size == _capacity) reallocate();
+            new (_ptr + _size) T(rgl::forward<Args>(args)...);
+            _size++;
+        }
+
+	    size_t size() const { return _size; }
+
+	    void reserve(size_t new_cap){
+	    	if(new_cap <= _capacity) return;
+
+	    	T* new_ptr = static_cast<T*>(::operator new[](new_cap * sizeof(T)));
+
+	    	for (size_t i = 0; i < _size; ++i) {
+		        new (new_ptr + i) T(move(_ptr[i]));
+		        _ptr[i].~T();
+    		}
+    		if (_is_heap) {
+        		::operator delete[](_ptr);
+    		}
+	    
+    		_ptr = new_ptr;
+		    _capacity = new_cap;
+		    _is_heap = true;
+	    }
 
 	    T& operator[](size_t index) { return _ptr[index]; }
         const T& operator[](size_t index) const { return _ptr[index]; }
@@ -145,22 +178,5 @@ namespace rgl{
 
         const_iterator begin() const { return _ptr; }
         const_iterator end() const { return _ptr + _size; }
-
-        bool empty() const { return _size == 0; }
-        
-        void pop_back() {
-            if (_size > 0) {
-                _ptr[--_size].~T();
-            }
-        }
-
-        template<typename... Args>
-        void emplace_back(Args&&... args) {
-            if (_size == _capacity) grow();
-            new (_ptr + _size) T(rgl::forward<Args>(args)...);
-            _size++;
-        }
-
-	    size_t size() const { return _size; }
 	};
 }

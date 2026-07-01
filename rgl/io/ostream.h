@@ -24,6 +24,7 @@
 
 namespace rgl {
     class string;
+    class string_view;
 
     class ostream {
     protected:
@@ -69,6 +70,7 @@ namespace rgl {
         ostream& operator<<(const char* str);
         ostream& operator<<(char* str);
         ostream& operator<<(const rgl::string& str);
+        ostream& operator<<(const rgl::string_view& str);
         ostream& operator<<(short value);
         ostream& operator<<(int value);
         ostream& operator<<(long value);

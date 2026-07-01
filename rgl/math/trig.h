@@ -17,32 +17,24 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-//concepts
+//trig.h
 #pragma once
 
-#include "traits.h"
+#include "constants.h"
 
-namespace rgl{
-	template<typename T>
-    struct is_simple_type : false_type {};
-
-    template<typename T, typename U>
-    concept same_as = is_same_v<T, U>;
-
-    template<typename T, template<typename> class Trait>
-    concept satisfies = Trait<T>::value;
-
-    template<typename T>
-    concept DefaultConstructible = is_default_constructible_v<T>;
-
-    template<typename T>
-    concept SimpleType = is_simple_type<T>::value;
-
-    template<typename To, typename From>
-    concept Castable = requires(From& f) {
-        { isa<To>(f) } -> same_as<bool>; 
-    };
-
-    template<typename B, typename D>
-    concept DerivedFrom = is_base_of_v<B, D>;
+namespace rgl::math{
+	inline float normalize_angle(float radians) {
+        radians = radians - consts::PI_2X * (float)((int)(radians * consts::INV_PI * 0.5f));
+        if (radians > consts::PI) radians -= consts::PI_2X;
+        if (radians < -consts::PI) radians += consts::PI_2X;
+        return radians;
+    }
+    inline float sin(float radians) {
+        radians = normalize_angle(radians);
+        float x2 = radians * radians;
+        return radians * (1.0f - x2 * (0.16666667f - x2 * 0.00833333f));
+    }
+    inline float cos(float radians) {
+        return sin(radians + consts::PI_2);
+    }
 }

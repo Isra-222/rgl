@@ -17,32 +17,27 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-//concepts
+//modifiers.h
 #pragma once
 
-#include "traits.h"
+namespace rgl::algo {
 
-namespace rgl{
-	template<typename T>
-    struct is_simple_type : false_type {};
+    template<typename Iterator>
+    void rotate(Iterator first, Iterator middle, Iterator last) {
+        auto next = middle;
+        while (first != next) {
+            swap(*first++, *next++);
+            if (next == last) next = middle;
+            else if (first == middle) middle = next;
+        }
+    }
+    template<typename Iterator>
+    void reverse(Iterator first, Iterator last) {
+        while (first < last - 1) {
+            --last;
+            swap(*first, *last);
+            ++first;
+        }
+    }
 
-    template<typename T, typename U>
-    concept same_as = is_same_v<T, U>;
-
-    template<typename T, template<typename> class Trait>
-    concept satisfies = Trait<T>::value;
-
-    template<typename T>
-    concept DefaultConstructible = is_default_constructible_v<T>;
-
-    template<typename T>
-    concept SimpleType = is_simple_type<T>::value;
-
-    template<typename To, typename From>
-    concept Castable = requires(From& f) {
-        { isa<To>(f) } -> same_as<bool>; 
-    };
-
-    template<typename B, typename D>
-    concept DerivedFrom = is_base_of_v<B, D>;
 }

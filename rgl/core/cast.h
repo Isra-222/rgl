@@ -20,6 +20,7 @@
 //cast
 #pragma once
 
+#include "error.h"
 #include "traits.h"
 #include "concepts.h"
 
@@ -44,9 +45,6 @@ namespace rgl {
 	    static SimpleType& getSimplifiedValue(T& Val) { return Val; }
 	};
 
-	template <typename T>
-	struct is_simple_type : false_type {};
-
 	template <typename To, typename From, typename Enable = void>
 	struct isa_impl {
 	    static inline bool doit(const From &Val) { return To::classof(&Val); }
@@ -56,11 +54,19 @@ namespace rgl {
 	struct isa_impl<To, From, enable_if_t<is_base_of_v<To, From>>> {
 	    static inline bool doit(const From &) { return true; }
 	};
+	template <typename To, typename From>
+    struct isa_impl<To, From*, void> {
+        static inline bool doit(const From *Val) { return To::classof(Val); }
+    };
 
 	template <typename To, typename From>
 	[[nodiscard]] inline bool isa(const From &Val) {
 	    return isa_impl<To, From>::doit(Val);
 	}
+	template <typename To, typename From>
+    [[nodiscard]] inline bool isa(From *Val) {
+        return isa_impl<To, From*, void>::doit(Val);
+    }
 
 	template <typename To, typename From>
 	[[nodiscard]] inline auto dyn_cast(From *Val) requires DerivedFrom<To, From> || has_classof<To>::value {
@@ -70,9 +76,14 @@ namespace rgl {
 
 	template <typename To, typename From>
 	[[nodiscard]] inline auto cast(From &Val) {
-	    assert(isa<To>(Val) && "cast<> failed: Type mismatch!");
+	    rgl_assert(isa<To>(Val) && "cast<> failed: Type mismatch!");
 	    return CastInfo<To, From>::doCast(Val);
 	}
+	template<typename To, typename From>
+    [[nodiscard]] inline To* cast(From* Val) {
+        rgl_assert(isa<To>(Val) && "cast<> failed: Type mismatch!");
+        return CastInfo<To, remove_cv_t<From>>::doCast(Val);
+    }
 
 
 	template <typename To, typename From>

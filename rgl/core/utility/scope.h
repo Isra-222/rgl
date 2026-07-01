@@ -17,32 +17,31 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-//concepts
+//scope
 #pragma once
 
-#include "traits.h"
+#include "move.h"
 
 namespace rgl{
-	template<typename T>
-    struct is_simple_type : false_type {};
+	template<typename Func>
+	class scope_exit{
+		Func f;
+		bool active;
+	public:
+		explicit scope_exit(Func f) : f(move(f)), active(true) {}
 
-    template<typename T, typename U>
-    concept same_as = is_same_v<T, U>;
+		~scope_exit(){if(active) f(); }
 
-    template<typename T, template<typename> class Trait>
-    concept satisfies = Trait<T>::value;
-
-    template<typename T>
-    concept DefaultConstructible = is_default_constructible_v<T>;
-
-    template<typename T>
-    concept SimpleType = is_simple_type<T>::value;
-
-    template<typename To, typename From>
-    concept Castable = requires(From& f) {
-        { isa<To>(f) } -> same_as<bool>; 
-    };
-
-    template<typename B, typename D>
-    concept DerivedFrom = is_base_of_v<B, D>;
+		scope_exit(const scope_exit&) = delete;
+        scope_exit& operator=(const scope_exit&) = delete;
+		
+		scope_exit(scope_exit&& other) noexcept : f(move(other.f)), active(other.active) {
+            other.active = false;
+        }
+        void dismiss() noexcept { active = false; }
+	};
+	template<typename Func>
+	scope_exit<Func> make_scope_exit(Func f){
+		return scope_exit<Func>(move(f));
+	}
 }

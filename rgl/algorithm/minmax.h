@@ -17,32 +17,21 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-//concepts
+//minmax.h
 #pragma once
 
-#include "traits.h"
-
-namespace rgl{
+namespace rgl::algo{
 	template<typename T>
-    struct is_simple_type : false_type {};
-
-    template<typename T, typename U>
-    concept same_as = is_same_v<T, U>;
-
-    template<typename T, template<typename> class Trait>
-    concept satisfies = Trait<T>::value;
+    const T& max(const T& a, const T& b){
+        return (a < b)? b : a;
+    }
 
     template<typename T>
-    concept DefaultConstructible = is_default_constructible_v<T>;
-
+    const T& min(const T& a, const T& b){
+        return (a < b)? a : b;
+    }
     template<typename T>
-    concept SimpleType = is_simple_type<T>::value;
-
-    template<typename To, typename From>
-    concept Castable = requires(From& f) {
-        { isa<To>(f) } -> same_as<bool>; 
-    };
-
-    template<typename B, typename D>
-    concept DerivedFrom = is_base_of_v<B, D>;
+    inline const T& clamp(const T& value, const T& min_val, const T& max_val){
+    	return (value < min_val) ? min_val : (value > max_val ? max_val : value);
+    }
 }

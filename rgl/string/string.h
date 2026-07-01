@@ -22,17 +22,38 @@
 
 #include "rgl/core/hash.h"
 #include "string_view.h"
+#include "rgl/core/utility/memory.h"
 #include "rgl/core/ctype.h"
 #include "rgl/memory/new.h"
-#include "../core/utility/move.h"
+#include "rgl/core/utility/move.h"
 
 namespace rgl {
 
     class string {
-        char* buffer = nullptr;
-        size_t len = 0;
+        static constexpr size_t SSO_CAP = 15;
+    
+        struct ShortString {
+            char buffer[SSO_CAP + 1];
+            unsigned char len;
+        };
+
+        struct LongString {
+            char* buffer;
+            size_t len;
+            size_t capacity;
+        };
+
+        union {
+            ShortString sso;
+            LongString long_str;
+        };
+        bool is_long = false;
 
         void reserve(size_t new_len);
+
+        char* data_ptr() { return is_long ? long_str.buffer : sso.buffer; }
+        const char* data_ptr() const { return is_long ? long_str.buffer : sso.buffer; }
+        size_t length_val() const { return is_long ? long_str.len : sso.len; }
 
     public:
         static const size_t npos = size_t(-1);
@@ -44,6 +65,22 @@ namespace rgl {
         string(string&& other) noexcept;
         string(const string& other);
         
+        template <size_t N>
+        string(const char (&str)[N]) {
+            constexpr size_t actual_len = N - 1;
+            if constexpr (actual_len <= SSO_CAP) {
+                memcpy(sso.buffer, str, actual_len + 1);
+                sso.len = static_cast<unsigned char>(actual_len);
+                is_long = false;
+            } else {
+                long_str.buffer = new char[actual_len + 1];
+                memcpy(long_str.buffer, str, actual_len + 1);
+                long_str.len = actual_len;
+                long_str.capacity = actual_len;
+                is_long = true;
+            }
+        }
+
         ~string();
 
         string& operator=(string&& other) noexcept;
@@ -64,8 +101,8 @@ namespace rgl {
         bool empty() const;
 
         const char* c_str() const;
-        char* data() { return buffer; }
-        const char* data() const { return buffer; }
+        char* data() { return data_ptr(); }
+        const char* data() const { return data_ptr(); }
         size_t size() const;
         size_t length() const;
         string_view view() const;
@@ -113,4 +150,4 @@ namespace rgl {
             return wyhash(reinterpret_cast<const uint8_t*>(key.data()), key.size(), seed);
         }
     };
-}
+}//namespace rgl

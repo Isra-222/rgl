@@ -19,6 +19,7 @@
 
 //ifstream.cpp
 #include "rgl/io/ifstream.h"
+#include "rgl/string/string.h"
 
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -27,7 +28,7 @@
 
 namespace rgl {
 
-    ifstream::ifstream(const rgl::string& path) {
+    ifstream::ifstream(const string& path) {
         int fd = ::open(path.c_str(), O_RDONLY);
         if (fd == -1) return;
 

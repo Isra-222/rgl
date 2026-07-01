@@ -17,32 +17,19 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-//concepts
+//utility.h
 #pragma once
 
-#include "traits.h"
+namespace rgl::math {
+    inline float abs(float x) {
+        return (x < 0) ? -x : x;
+    }
+    inline float lerp(float a, float b, float t) {
+        return a + t * (b - a);
+    }
 
-namespace rgl{
-	template<typename T>
-    struct is_simple_type : false_type {};
+    inline constexpr signed long long gcd(signed long long a, signed long long b){
+        return b == 0? a : gcd(b, a % b);
+    }
 
-    template<typename T, typename U>
-    concept same_as = is_same_v<T, U>;
-
-    template<typename T, template<typename> class Trait>
-    concept satisfies = Trait<T>::value;
-
-    template<typename T>
-    concept DefaultConstructible = is_default_constructible_v<T>;
-
-    template<typename T>
-    concept SimpleType = is_simple_type<T>::value;
-
-    template<typename To, typename From>
-    concept Castable = requires(From& f) {
-        { isa<To>(f) } -> same_as<bool>; 
-    };
-
-    template<typename B, typename D>
-    concept DerivedFrom = is_base_of_v<B, D>;
 }

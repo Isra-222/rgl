@@ -17,32 +17,30 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-//concepts
+//search.h
 #pragma once
 
-#include "traits.h"
-
-namespace rgl{
-	template<typename T>
-    struct is_simple_type : false_type {};
-
-    template<typename T, typename U>
-    concept same_as = is_same_v<T, U>;
-
-    template<typename T, template<typename> class Trait>
-    concept satisfies = Trait<T>::value;
-
-    template<typename T>
-    concept DefaultConstructible = is_default_constructible_v<T>;
-
-    template<typename T>
-    concept SimpleType = is_simple_type<T>::value;
-
-    template<typename To, typename From>
-    concept Castable = requires(From& f) {
-        { isa<To>(f) } -> same_as<bool>; 
-    };
-
-    template<typename B, typename D>
-    concept DerivedFrom = is_base_of_v<B, D>;
+namespace rgl::algo{
+	template<typename Iterator, typename T>
+    Iterator binary_search(Iterator first, Iterator last, const T& value) {
+        while (first < last) {
+            Iterator mid = first + (last - first) / 2;
+            if (*mid < value) {
+                first = mid + 1;
+            } else if (value < *mid) {
+                last = mid;
+            } else {
+                return mid;
+            }
+        }
+        return last;
+    }
+    template<typename T, typename Iterator>
+    Iterator find(Iterator first, Iterator last, const T& value) {
+        while (first != last) {
+            if (*first == value) return first;
+            ++first;
+        }
+        return last;
+    }
 }

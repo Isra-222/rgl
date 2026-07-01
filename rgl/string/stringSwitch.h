@@ -17,32 +17,31 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-//concepts
+//stringSwitch.h
 #pragma once
 
-#include "traits.h"
+#include "rgl/core/utility/memory.h"
+#include "string_view.h"
 
 namespace rgl{
 	template<typename T>
-    struct is_simple_type : false_type {};
+	class stringSwitch {
+	    rgl::string_view Str;
+	    T Result;
+	    bool Found;
 
-    template<typename T, typename U>
-    concept same_as = is_same_v<T, U>;
+	public:
+	    explicit stringSwitch(rgl::string_view S) : Str(S), Result(), Found(false) {}
 
-    template<typename T, template<typename> class Trait>
-    concept satisfies = Trait<T>::value;
+	    stringSwitch& Case(rgl::string_view S, T Value) {
+	        if (!Found && Str.size() == S.size() && 
+	            rgl::memcmp(Str.data(), S.data(), S.size()) == 0) {
+	            Result = Value;
+	            Found = true;
+	        }
+	        return *this;
+	    }
 
-    template<typename T>
-    concept DefaultConstructible = is_default_constructible_v<T>;
-
-    template<typename T>
-    concept SimpleType = is_simple_type<T>::value;
-
-    template<typename To, typename From>
-    concept Castable = requires(From& f) {
-        { isa<To>(f) } -> same_as<bool>; 
-    };
-
-    template<typename B, typename D>
-    concept DerivedFrom = is_base_of_v<B, D>;
-}
+	    T Default(T Value) const { return Found ? Result : Value; }
+	};
+}//namespace 

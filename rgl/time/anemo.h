@@ -20,12 +20,12 @@
 #pragma once 
 
 #include <time.h>
-#include "rgl/math/math.h"
+#include "rgl/math/ratio.h"
 
 namespace rgl::anemo {
     
     //durations
-    template<typename Rep, typename Period = rgl::ratio<1>>
+    template<typename Rep, typename Period = rgl::math::ratio<1>>
     class Duration final {
         Rep ticks_;
     public:
@@ -70,14 +70,14 @@ namespace rgl::anemo {
         }
     }
 
-    using nanoseconds = Duration<int64_t, rgl::ratio<1, 1000000000>>;
-    using microseconds = Duration<int64_t, rgl::ratio<1, 1000000>>;
-    using milliseconds = Duration<int64_t, rgl::ratio<1, 1000>>;
+    using nanoseconds = Duration<int64_t, rgl::math::ratio<1, 1000000000>>;
+    using microseconds = Duration<int64_t, rgl::math::ratio<1, 1000000>>;
+    using milliseconds = Duration<int64_t, rgl::math::ratio<1, 1000>>;
 
-    using seconds = Duration<int64_t, rgl::ratio<1, 1>>;
+    using seconds = Duration<int64_t, rgl::math::ratio<1, 1>>;
 
-    using minutes = Duration<int64_t, rgl::ratio<60, 1>>;
-    using hours = Duration<int64_t, rgl::ratio<3600, 1>>;
+    using minutes = Duration<int64_t, rgl::math::ratio<60, 1>>;
+    using hours = Duration<int64_t, rgl::math::ratio<3600, 1>>;
 
     //clocks
     template<typename Clock, typename Duration>
@@ -97,7 +97,7 @@ namespace rgl::anemo {
     class system_clock final{
     public:
         using rep = int64_t;
-        using period = rgl::ratio<1, 1000000000>; 
+        using period = rgl::math::ratio<1, 1000000000>; 
         using duration = Duration<rep, period>;
         using time_point = rgl::anemo::time_point<system_clock, duration>;
 
@@ -112,7 +112,7 @@ namespace rgl::anemo {
     class steady_clock final{
     public:
         using rep = int64_t;
-        using period = rgl::ratio<1, 1000000000>;
+        using period = rgl::math::ratio<1, 1000000000>;
         using duration = Duration<rep, period>;
         using time_point = rgl::anemo::time_point<steady_clock, duration>;
 

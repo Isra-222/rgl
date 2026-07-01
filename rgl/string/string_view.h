@@ -34,6 +34,8 @@ namespace rgl {
         string_view() : ptr(nullptr), len(0) {}
         string_view(const char* str) : ptr(str), len(str ? strlen(str) : 0) {}
         string_view(const char* str, size_t l) : ptr(str), len(l) {}
+        template <size_t N>
+        constexpr string_view(const char (&str)[N]) noexcept : ptr(str), len(N - 1) {}
     
         const char* data() const { return ptr; }
         size_t size() const { return len; }

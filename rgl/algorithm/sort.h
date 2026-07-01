@@ -17,56 +17,33 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-//algorithm
-
+//sort.h
 #pragma once
+
 #include "rgl/core/utility/move.h"
 
-namespace rgl {
-
-    template<typename T, typename Iterator>
-    Iterator find(Iterator first, Iterator last, const T& value) {
-        while (first != last) {
-            if (*first == value) return first;
-            ++first;
-        }
-        return last;
-    }
-    template<typename Iterator>
+namespace rgl::algo{
+	template<typename Iterator>
     void sort(Iterator first, Iterator last) {
-        if (first == last) return;
-        auto pivot = *first;
-        Iterator i = first, j = last - 1;
-        
+        if (first >= last - 1) return;
+
+        auto mid = first + (last - first) / 2;
+        auto pivot = *mid;
+
+        Iterator i = first;
+        Iterator j = last - 1;
+
         while (i <= j) {
             while (*i < pivot) ++i;
             while (*j > pivot) --j;
             if (i <= j) {
                 swap(*i, *j);
-                ++i; --j;
+                ++i;
+                --j;
             }
         }
+
         if (first < j) sort(first, j + 1);
         if (i < last) sort(i, last);
-    }
-
-    template<typename Iterator>
-    void rotate(Iterator first, Iterator middle, Iterator last) {
-        auto next = middle;
-        while (first != next) {
-            swap(*first++, *next++);
-            if (next == last) next = middle;
-            else if (first == middle) middle = next;
-        }
-    }
-
-    template<typename T>
-    const T& max(const T& a, const T& b){
-        return (a < b)? b : a;
-    }
-
-    template<typename T>
-    const T& min(const T& a, const T& b){
-        return (a < b)? a : b;
     }
 }

@@ -17,32 +17,19 @@
  * <https://www.gnu.org/licenses/>.
 */
 
-//concepts
+//constants.h
 #pragma once
+namespace rgl::math {
 
-#include "traits.h"
-
-namespace rgl{
-	template<typename T>
-    struct is_simple_type : false_type {};
-
-    template<typename T, typename U>
-    concept same_as = is_same_v<T, U>;
-
-    template<typename T, template<typename> class Trait>
-    concept satisfies = Trait<T>::value;
-
-    template<typename T>
-    concept DefaultConstructible = is_default_constructible_v<T>;
-
-    template<typename T>
-    concept SimpleType = is_simple_type<T>::value;
-
-    template<typename To, typename From>
-    concept Castable = requires(From& f) {
-        { isa<To>(f) } -> same_as<bool>; 
-    };
-
-    template<typename B, typename D>
-    concept DerivedFrom = is_base_of_v<B, D>;
+	namespace consts {
+        constexpr float PI     = 3.14159265358979323846f;
+        constexpr float PI_2    = 1.57079632f;
+        constexpr float PI_2X   = 6.28318530f;
+        constexpr float E      = 2.71828182845904523536f;
+        constexpr float SQRT2  = 1.41421356237309504880f;
+        constexpr float INV_PI = 0.31830988618379067154f;
+        constexpr float RAD2DEG = 57.29577951308232087680f;
+        constexpr float DEG2RAD = 0.01745329251994329577f;
+    }
+    
 }
