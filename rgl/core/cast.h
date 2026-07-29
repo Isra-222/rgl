@@ -26,7 +26,11 @@
 
 namespace rgl {
 	template <typename To, typename From, typename Enable = void>
-    struct CastInfo;
+	struct CastInfo {
+	    static inline To* doCast(From* Val) {
+	        return static_cast<To*>(Val);
+	    }
+	};
     template <typename To, typename From, typename SimpleFrom>
 	struct cast_convert_val {
 	    static inline To& doit(From &Val) {
@@ -70,7 +74,7 @@ namespace rgl {
 
 	template <typename To, typename From>
 	[[nodiscard]] inline auto dyn_cast(From *Val) requires DerivedFrom<To, From> || has_classof<To>::value {
-	    if (isa<To>(Val)) return CastInfo<To, From*>::doCast(Val);
+	    if (isa<To>(Val)) return CastInfo<To, From>::doCast(Val);
 	    return static_cast<To*>(nullptr);
 	}
 

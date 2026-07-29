@@ -21,6 +21,7 @@
 #pragma once
 
 #include "rgl/core/types.h"
+#include "rgl/core/iterator.h"
 #include "rgl/core/utility/move.h"
 #include "rgl/memory/new.h"
 
@@ -40,6 +41,11 @@ namespace rgl{
     		reserve(next_capacity);
 	    }
 	public:
+        using iterator = T*;
+        using const_iterator = const T*;
+		using reverse_iterator = typename rgl::reverse_iterator<iterator>;
+    	using const_reverse_iterator = typename rgl::reverse_iterator<const_iterator>;
+	    
 	    smallVector() : _ptr(stack_ptr()), _size(0), _capacity(N), _is_heap(false) {}
 
 	    ~smallVector() {
@@ -50,16 +56,28 @@ namespace rgl{
 	    }
 
 	    smallVector(const smallVector& other)
-	    : _size(0), _capacity(N), _is_heap(false) {
-	    	_ptr = stack_ptr();
-	    	for(size_t i = 0; i < other._size; ++i)
-	    		emplace_back(other[i]);
-	    }
+    	: _ptr(stack_ptr()), _size(0), _capacity(N), _is_heap(false) {
+		    if (other._size > 0) {
+		        if (other._size > N) {
+		            _ptr = static_cast<T*>(::operator new[](other._size * sizeof(T)));
+		            _capacity = other._size;
+		            _is_heap = true;
+		        }
+		        for (size_t i = 0; i < other._size; ++i) {
+		            new (_ptr + i) T(other._ptr[i]);
+		        }
+		        _size = other._size;
+		    }
+		}
 	    smallVector& operator=(const smallVector& other){
-	    	if(this != other){
+	    	if(this != &other){
 	    		clear();
-	    		for(size_t i = 0; i < other._size; ++i)
-	    			emplace_back(other[i]);
+	    		if (other._size > 0) {
+		            reserve(other._size);
+		            for(size_t i = 0; i < other._size; ++i)
+		                new (_ptr + i) T(other._ptr[i]);
+		            _size = other._size;
+		        }
 	    	}
 	    	return *this;
 	    }
@@ -88,32 +106,31 @@ namespace rgl{
             return *this;
         }
 
-	    smallVector(smallVector&& other) noexcept {
-		    if (!other._is_heap) {
-		        _size = other._size;
-		        _capacity = N;
-		        _is_heap = false;
-		        _ptr = stack_ptr();
-		        for(size_t i = 0; i < _size; ++i) {
-		            new (_ptr + i) T(move(other._ptr[i]));
-		            other._ptr[i].~T();
-		        }
-		    } else {
-		        _size = other._size;
-		        _capacity = other._capacity;
-		        _is_heap = true;
+	    smallVector(smallVector&& other) noexcept 
+		: _ptr(stack_ptr()), _size(other._size), _capacity(other._capacity), _is_heap(other._is_heap) {
+		    if (other._is_heap) {
 		        _ptr = other._ptr;
 		        other._ptr = other.stack_ptr();
 		        other._is_heap = false;
-		        other._size = 0;
+		    } else {
+		        for (size_t i = 0; i < other._size; ++i) {
+		            new (_ptr + i) T(move(other._ptr[i]));
+		            other._ptr[i].~T();
+		        }
 		    }
 		    other._size = 0;
+		    other._capacity = N;
 		}
-
+		
 	    void push_back(const T& value) {
 	        if (_size == _capacity) reallocate();
 	        new (_ptr + _size) T(value);
 	        _size++;
+	    }
+	    void push_back(T&& value){
+	    	if(_size == _capacity) reallocate();
+	    	new (_ptr + _size) T(rgl::move(value));
+	    	_size++;
 	    }
 
 		void clear() {
@@ -164,19 +181,101 @@ namespace rgl{
 		    _is_heap = true;
 	    }
 
+	    iterator erase(iterator pos){
+	    	size_t index = pos - _ptr;
+	    	if(index >= _size) return end();
+
+	    	_ptr[index].~T();
+	    	for(size_t i = index; i < _size - 1; ++i){
+	    		new (_ptr + i) T(rgl::move(_ptr[i + 1]));
+	    		_ptr[i + 1].~T();
+	    	}
+
+	    	_size--;
+	    	return _ptr + index;
+	    }
+	    iterator erase(size_t index) {
+            if (index >= _size) return end();
+            return erase(_ptr + index);
+        }
+
+        iterator insert(iterator pos, const T& value) {
+            size_t index = pos - _ptr;
+            if (index > _size) index = _size;
+
+            if (_size == _capacity) {
+                reallocate();
+                pos = _ptr + index;
+            }
+            for (size_t i = _size; i > index; --i) {
+                new (_ptr + i) T(rgl::move(_ptr[i - 1]));
+                _ptr[i - 1].~T();
+            }
+
+            new (_ptr + index) T(value);
+            _size++;
+
+            return _ptr + index;
+        }
+
+        iterator insert(iterator pos, T&& value) {
+            size_t index = pos - _ptr;
+            if (index > _size) index = _size;
+
+            if (_size == _capacity) {
+                reallocate();
+                pos = _ptr + index;
+            }
+
+            for (size_t i = _size; i > index; --i) {
+                new (_ptr + i) T(rgl::move(_ptr[i - 1]));
+                _ptr[i - 1].~T();
+            }
+
+            new (_ptr + index) T(rgl::move(value));
+            _size++;
+
+            return _ptr + index;
+        }
+
+        iterator insert(size_t index, const T& value) {
+            return insert(_ptr + index, value);
+        }
+
+        iterator insert(size_t index, T&& value) {
+            return insert(_ptr + index, rgl::move(value));
+        }
+
+	    bool operator==(const smallVector& other) const {
+		    if (_size != other._size) return false;
+		    for (size_t i = 0; i < _size; ++i) {
+		        if (_ptr[i] != other._ptr[i]) return false;
+		    }
+		    return true;
+		}
+
+		bool operator!=(const smallVector& other) const {
+		    return !(*this == other);
+		}
+
 	    T& operator[](size_t index) { return _ptr[index]; }
         const T& operator[](size_t index) const { return _ptr[index]; }
 
         T& front() { return _ptr[0]; }
+        const T& front() const { return _ptr[0]; }
         T& back() { return _ptr[_size - 1]; }
-
-        using iterator = T*;
-        using const_iterator = const T*;
+        const T& back() const { return _ptr[_size - 1]; }
 
         iterator begin() { return _ptr; }
         iterator end() { return _ptr + _size; }
 
         const_iterator begin() const { return _ptr; }
         const_iterator end() const { return _ptr + _size; }
+
+        reverse_iterator rbegin() { return reverse_iterator(end()); }
+		reverse_iterator rend() { return reverse_iterator(begin()); }
+
+		const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
+        const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
 	};
 }

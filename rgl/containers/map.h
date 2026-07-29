@@ -22,6 +22,7 @@
 #include "rgl/memory/new.h"
 #include "rgl/core/hash.h"
 #include "rgl/core/utility/pair.h"
+#include "rgl/core/error.h"
 
 namespace rgl {
 
@@ -99,9 +100,11 @@ public:
         value_type& operator*() const { return current->data; }
 
         bool operator!=(const iterator& other) const { return current != other.current; }
+        bool operator==(const iterator& other) const { return current == other.current; }
     };
 
     map(size_t cap = 16) {
+        if(cap == 0) cap = 16;
         table_size = next_power_of_two(cap);
         table = (Entry*)::operator new[](table_size * sizeof(Entry));
         
@@ -163,9 +166,12 @@ public:
     }
 
     void clear() {
-        delete[] table;
-        table = nullptr;
-        table_size = 0;
+        for(size_t i = 0; i < table_size; ++i) {
+            if (table[i].state == OCCUPIED) {
+                table[i].data.~value_type();
+            }
+            table[i].state = EMPTY;
+        }
         element_count = 0;
     }
 
@@ -181,7 +187,7 @@ public:
     }
 
     V* get(const K& key) {
-        if (table_size == 0) return nullptr;
+        if (table_size == 0 || table == nullptr) return nullptr;
         uint64_t h = hash_func(key, seed);
         size_t mask = table_size - 1;
         size_t idx = h & mask;
@@ -279,6 +285,19 @@ public:
         return *get(key);
     }
 
+    V& at(const K& key){
+        V* val = get(key);
+        if(!val)
+            panic("rgl::map::at: key not found");
+        return *val;
+    }
+    const V& at(const K& key) const {
+        const_iterator it = find(key);
+        if (it == end()) 
+            panic("rgl::map::at: key not found");
+        return it->second;
+    }
+
     iterator begin() { return iterator(table, table + table_size); }
     iterator end() { return iterator(table + table_size, table + table_size); }
     
@@ -304,6 +323,7 @@ public:
         const value_type* operator->() const { return &current->data; }
         
         bool operator!=(const const_iterator& other) const { return current != other.current; }
+        bool operator==(const const_iterator& other) const { return current == other.current; }
     };
     
     const_iterator find(const K& key) const {

@@ -23,7 +23,7 @@
 #include "traits.h"
 
 namespace rgl{
-	template<typename T>
+    template<typename T>
     struct is_simple_type : false_type {};
 
     template<typename T, typename U>
@@ -43,6 +43,6 @@ namespace rgl{
         { isa<To>(f) } -> same_as<bool>; 
     };
 
-    template<typename B, typename D>
-    concept DerivedFrom = is_base_of_v<B, D>;
+    template<typename To, typename From>
+    concept DerivedFrom = is_base_of_v<From, To>;
 }

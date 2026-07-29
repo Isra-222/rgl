@@ -40,6 +40,13 @@ namespace rgl {
         static constexpr T lowest() { return min(); }\
     };
 
+    #define RGL_DEFINE_LIMITS_FLOAT(T, min_val, max_val, lowest_val) \
+    template<> struct numeric_limits<T> { \
+        static constexpr T min() { return min_val; } \
+        static constexpr T max() { return max_val; } \
+        static constexpr T lowest() { return lowest_val; } \
+    };
+
     RGL_DEFINE_LIMITS_UNSIGNED(uint8_t)
     RGL_DEFINE_LIMITS_UNSIGNED(uint16_t)
     RGL_DEFINE_LIMITS_UNSIGNED(uint32_t)
@@ -49,6 +56,9 @@ namespace rgl {
     RGL_DEFINE_LIMITS_SIGNED(int16_t)
     RGL_DEFINE_LIMITS_SIGNED(int32_t)
     RGL_DEFINE_LIMITS_SIGNED(int64_t)
+
+    RGL_DEFINE_LIMITS_FLOAT(float, __FLT_MIN__, __FLT_MAX__, -__FLT_MAX__)
+    RGL_DEFINE_LIMITS_FLOAT(double, __DBL_MIN__, __DBL_MAX__, -__DBL_MAX__)
 
     #undef RGL_DEFINE_LIMITS_UNSIGNED
     #undef RGL_DEFINE_LIMITS_SIGNED

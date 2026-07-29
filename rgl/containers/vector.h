@@ -21,6 +21,7 @@
 #pragma once
 
 #include "rgl/core/types.h"
+#include "rgl/core/iterator.h"
 #include "rgl/core/utility/move.h"
 #include "rgl/memory/new.h"
 
@@ -29,55 +30,52 @@ namespace rgl {
 	class vector final{
 		size_t _size;
 		size_t _capacity;
-		T* ptr;
+		T* _ptr;
 	
 		void reallocate(size_t qty) {
             T* tmp = static_cast<T*>(::operator new[](qty * sizeof(T)));
             
             for(size_t i = 0; i < _size; ++i) {
-                new (&tmp[i]) T(move(ptr[i]));
-                ptr[i].~T();
+                new (&tmp[i]) T(move(_ptr[i]));
+                _ptr[i].~T();
             }
 
-            ::operator delete[](ptr);
-            ptr = tmp;
+            ::operator delete[](_ptr);
+            _ptr = tmp;
             _capacity = qty;
         }
 	public:
+		using iterator = T*;
+		using const_iterator = const T*;
+		using reverse_iterator = typename rgl::reverse_iterator<iterator>;
+    	using const_reverse_iterator = typename rgl::reverse_iterator<const_iterator>;
+
 		~vector(){
 			clear();
-			::operator delete[](ptr);
+			::operator delete[](_ptr);
 		}
 		
-		vector() : _size(0), _capacity(0), ptr(nullptr) {}
+		vector() : _size(0), _capacity(0), _ptr(nullptr) {}
 		vector(size_t s) : _size(0), _capacity(s), 
-            ptr(s > 0 ? static_cast<T*>(::operator new[](s * sizeof(T))) : nullptr) {}
+            _ptr(s > 0 ? static_cast<T*>(::operator new[](s * sizeof(T))) : nullptr) {}
 
 		vector(vector&& other) noexcept
-		 : _size(other._size), _capacity(other._capacity), ptr(other.ptr) {
+		 : _size(other._size), _capacity(other._capacity), _ptr(other._ptr) {
 		 	other._size = 0;
 		 	other._capacity = 0;
-		 	other.ptr = nullptr;
+		 	other._ptr = nullptr;
 		}
 		vector(const vector& other) : _size(other._size), _capacity(other._size) {
-		    ptr = _capacity > 0 ? static_cast<T*>(::operator new[](_capacity * sizeof(T))) : nullptr;
+		    _ptr = _capacity > 0 ? static_cast<T*>(::operator new[](_capacity * sizeof(T))) : nullptr;
 		    for (size_t i = 0; i < _size; ++i) {
-		        new (&ptr[i]) T(other.ptr[i]);
+		        new (&_ptr[i]) T(other._ptr[i]);
 		    }
 		}
 
 		vector& operator=(const vector& other) {
 		    if (this != &other) {
-		        clear();
-		        if (_capacity < other._size) {
-		            ::operator delete[](ptr);
-		            _capacity = other._size;
-		            ptr = static_cast<T*>(::operator new[](_capacity * sizeof(T)));
-		        }
-		        for (size_t i = 0; i < other._size; ++i) {
-		            new (&ptr[i]) T(other.ptr[i]);
-		        }
-		        _size = other._size;
+		    	vector temp(other);
+		    	swap(temp);
 		    }
 		    return *this;
 		}
@@ -85,13 +83,13 @@ namespace rgl {
 		vector& operator=(vector&& other) noexcept {
             if(this != &other) {
                 clear();
-                ::operator delete[](ptr);
+                ::operator delete[](_ptr);
 
-                ptr = other.ptr;
+                _ptr = other._ptr;
                 _size = other._size;
                 _capacity = other._capacity;
 
-                other.ptr = nullptr;
+                other._ptr = nullptr;
                 other._size = 0;
                 other._capacity = 0;
             }
@@ -100,7 +98,7 @@ namespace rgl {
 
 		void push_back(const T& value) {
             if (_size == _capacity) reserve(_capacity == 0 ? 1 : _capacity * 2);
-            new (&ptr[_size]) T(value);
+            new (&_ptr[_size]) T(value);
             _size++;
         }
 
@@ -108,7 +106,7 @@ namespace rgl {
 		    if (_size == _capacity) {
 		        reserve(_capacity == 0 ? 1 : _capacity * 2);
 		    }
-			new (&ptr[_size]) T(move(value));
+			new (&_ptr[_size]) T(move(value));
 			_size++;
 		}
 		void reserve(size_t s){
@@ -123,36 +121,112 @@ namespace rgl {
 		    if (_size == _capacity) {
 		        reserve(_capacity == 0 ? 1 : _capacity * 2);
 		    }
-		    new (&ptr[_size]) T(rgl::forward<Args>(args)...);
+		    new (&_ptr[_size]) T(rgl::forward<Args>(args)...);
 		    _size++;
 		}
 		void clear() {
 		    for (size_t i = 0; i < _size; ++i) {
-		        ptr[i].~T();
+		        _ptr[i].~T();
 		    }
 		    _size = 0;
 		}
 		void pop_back() {
  			if(_size > 0)
- 				ptr[--_size].~T();
+ 				_ptr[--_size].~T();
         }
         bool empty() const {
         	return _size == 0;
         }
+        iterator erase(size_t index) {
+            if (index >= _size) return end();
+            return erase(_ptr + index);
+        }
+        iterator erase(iterator pos) {
+            size_t index = pos - _ptr;
+            if (index >= _size) return end();
+            _ptr[index].~T();
 
+            for (size_t i = index; i < _size - 1; ++i) {
+                new (_ptr + i) T(rgl::move(_ptr[i + 1]));
+                _ptr[i + 1].~T();
+            }
 
-		T& operator[](size_t index){ return ptr[index]; }
-		const T& operator[](size_t index) const { return ptr[index]; }
-		T& front() { return ptr[0]; }
-        T& back() { return ptr[_size - 1]; }
+            _size--;
+            return _ptr + index;
+        }
 
-		using iterator = T*;
-		using const_iterator = const T*;
+        iterator insert(iterator pos, const T& value) {
+            size_t index = pos - _ptr;
+            if (index > _size) index = _size;
 
-		iterator begin() { return ptr; }
-		iterator end() { return ptr + _size; }
+            if (_size == _capacity) {
+                size_t next_capacity = (_capacity == 0) ? 4 : (_capacity * 2);
+                reallocate(next_capacity);
+                pos = _ptr + index;
+            }
+            for (size_t i = _size; i > index; --i) {
+                new (_ptr + i) T(rgl::move(_ptr[i - 1]));
+                _ptr[i - 1].~T();
+            }
 
-		const_iterator begin() const { return ptr; }
-		const_iterator end() const { return ptr + _size; }
+            new (_ptr + index) T(value);
+            _size++;
+
+            return _ptr + index;
+        }
+
+        iterator insert(iterator pos, T&& value) {
+            size_t index = pos - _ptr;
+            if (index > _size) index = _size;
+
+            if (_size == _capacity) {
+                size_t next_capacity = (_capacity == 0) ? 4 : (_capacity * 2);
+                reallocate(next_capacity);
+                pos = _ptr + index;
+            }
+
+            for (size_t i = _size; i > index; --i) {
+                new (_ptr + i) T(rgl::move(_ptr[i - 1]));
+                _ptr[i - 1].~T();
+            }
+
+            new (_ptr + index) T(rgl::move(value));
+            _size++;
+
+            return _ptr + index;
+        }
+
+        iterator insert(size_t index, const T& value) {
+            return insert(_ptr + index, value);
+        }
+
+        iterator insert(size_t index, T&& value) {
+            return insert(_ptr + index, rgl::move(value));
+        }
+
+        void swap(vector& other) noexcept {
+    		rgl::swap(_size, other._size);
+    		rgl::swap(_capacity, other._capacity);
+    		rgl::swap(_ptr, other._ptr);
+		}
+
+		T& operator[](size_t index){ return _ptr[index]; }
+		const T& operator[](size_t index) const { return _ptr[index]; }
+		T& front() { return _ptr[0]; }
+		const T& front() const { return _ptr[0]; }
+        T& back() { return _ptr[_size - 1]; }
+        const T& back() const { return _ptr[_size - 1]; }
+
+		iterator begin() { return _ptr; }
+		iterator end() { return _ptr + _size; }
+		
+		const_iterator begin() const { return _ptr; }
+		const_iterator end() const { return _ptr + _size; }
+	
+		reverse_iterator rbegin() { return reverse_iterator(end()); }
+		reverse_iterator rend() { return reverse_iterator(begin()); }
+
+		const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
+        const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
 	};
 };

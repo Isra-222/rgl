@@ -49,10 +49,10 @@ namespace rgl {
 	    #endif
 	}
 
-	[[noreturn]] void panic(const char* message, source_location loc){
+	[[noreturn]] void panic_impl(const char* message, source_location loc) noexcept{
 		err << "Panic at " << loc.file << ":" << loc.line 
         << " in function " << loc.function << "\n"
         << "Message: " << message << endl;
-		abort();
+        abort();
 	}
 }

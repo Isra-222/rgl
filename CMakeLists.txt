@@ -1,7 +1,17 @@
 cmake_minimum_required(VERSION 3.10)
-project(rgl CXX)
+project(rgl CXX) # Regular Library
 
-add_compile_options(-fdiagnostics-color=always -Wextra -Wall -Werror)
+add_compile_options(
+    -fdiagnostics-color=always 
+    -Wextra 
+    -Wall 
+    -Werror
+    -fno-rtti 
+    -fno-exceptions 
+    -fno-stack-protector 
+    -fno-unwind-tables 
+    -fno-asynchronous-unwind-tables
+)
 
 add_subdirectory(lib/core)
 add_subdirectory(lib/io)

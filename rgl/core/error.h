@@ -31,14 +31,16 @@ namespace rgl {
     #define rgl_here rgl::source_location{__FILE__, __LINE__, __builtin_FUNCTION()}
 
     [[noreturn]] void abort() noexcept;
-    [[noreturn]] void panic(const char* message, source_location loc = rgl_here);
+    [[noreturn]] void panic_impl(const char* message, source_location loc) noexcept;
+
+    #define panic(message) rgl::panic_impl((message), rgl_here)
 
     [[noreturn]] void unreachable() noexcept;
 
     #define rgl_assert(condition) \
         do { \
             if (!(condition)) { \
-                rgl::panic("Assert failed: " #condition); \
+                panic("Assert failed: " #condition); \
             } \
         } while(0)
 }
