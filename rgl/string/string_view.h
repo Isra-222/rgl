@@ -31,6 +31,8 @@ namespace rgl {
         const char* ptr;
         size_t len;
     public:
+        static constexpr size_t npos = ~static_cast<size_t>(0);
+
         string_view() : ptr(nullptr), len(0) {}
         string_view(const char* str) : ptr(str), len(str ? strlen(str) : 0) {}
         string_view(const char* str, size_t l) : ptr(str), len(l) {}
@@ -39,6 +41,12 @@ namespace rgl {
     
         const char* data() const { return ptr; }
         size_t size() const { return len; }
+
+        constexpr string_view substr(size_t pos = 0, size_t count = npos) const{
+            if(pos >= len) return string_view("", 0);
+            size_t rlen = (count == npos || pos + count > len) ? (len - pos) : count;
+            return string_view(ptr + pos, rlen);
+        }
 
         char operator[](size_t i) const { return ptr[i]; }
         operator bool() const { return ptr != nullptr && len > 0; }

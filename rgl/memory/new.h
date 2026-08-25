@@ -1,5 +1,8 @@
 #ifndef RGL_NEW_H
 #define RGL_NEW_H
+#ifdef RGL_NOT_OVERRIDE_GLOBAL_NEW
+
+#else
 
 #pragma GCC system_header
 
@@ -49,4 +52,5 @@ inline void operator delete[](void* p, rgl::size_t size) noexcept {
     ::free(p);
 }
 
+#endif //RGL_NOT_OVERRIDE_GLOBAL_NEW
 #endif // RGL_NEW_H

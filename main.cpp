@@ -26,6 +26,7 @@
 #include "rgl/async/mutex.h"
 #include "rgl/memory/unique_ptr.h"
 #include "rgl/time/anemo.h"
+#include "rgl/core/utility/function.h"
 
 #include "rgl/math/calculus.h"
 #include "rgl/math/trig.h"
@@ -132,6 +133,14 @@ void test_containers() {
     if (it != myMap.end()) {
         rgl::out << "Map: Key 1 found -> " << it->second << rgl::endl;
     }
+    enum class Enumeration : rgl::uint8_t {
+        Zero = 0,
+        One,
+        Two,
+        Three
+    };
+    rgl::map<Enumeration, rgl::uint32_t> NumberMap;
+    NumberMap[Enumeration::Zero] = 0;
 }
 
 float square(float x) { return x * x; }
@@ -178,9 +187,14 @@ int test_string_switch(rgl::string_view value){
 }
 
 int main() {
+    rgl::string noc("XD", 3);
     print_license_header();
     auto start = rgl::anemo::steady_clock::now();
     rgl::out << "Initializing RGL Library Test Suite..." << rgl::endl;
+    rgl::out << "Typing a number and we can add one :" << rgl::endl;
+    int number;
+    rgl::in >> number;
+    rgl::out << "Result is: " << ++number << rgl::endl;
 
     test_rgl_algorithms();
     test_sync();
@@ -189,6 +203,12 @@ int main() {
     test_math_and_random();
     test_random_features();
     int x = test_string_switch("noc");
+
+    rgl::out << "Testing function" << rgl::endl;
+    rgl::function<float(float)> callback;
+    callback = square;
+    rgl:: out << "Squere (2) from callback: " << static_cast<rgl::uint32_t>(callback(2)) << rgl::endl;
+
     rgl::out << "Value of x: " << x << rgl::endl;
 
     auto end = rgl::anemo::steady_clock::now();

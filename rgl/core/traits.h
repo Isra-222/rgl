@@ -114,4 +114,25 @@ namespace rgl {
     
     template<typename T>
     inline constexpr bool is_pointer_v = is_pointer<remove_cv_t<T>>::value;
-}
+
+    template<typename T>
+    struct is_enum : integral_constant<bool, __is_enum(T)> {};
+
+    template<typename T>
+    inline constexpr bool is_enum_v = is_enum<T>::value;
+
+    template<typename T>
+    struct underlying_type {
+        using type = __underlying_type(T);
+    };
+    template<typename T>
+    using underlying_type_t = typename underlying_type<T>::type;
+
+    template<typename T>
+    struct is_signed{
+        static constexpr bool value = (T(-1) < T(0));
+    };
+    template<typename T>
+    inline constexpr bool is_signed_v = is_signed<T>::value;
+
+}//namespace rgl

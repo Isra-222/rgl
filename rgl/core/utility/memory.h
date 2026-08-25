@@ -57,4 +57,16 @@ namespace rgl {
             return 0;
         #endif
     }
+    inline void* memset(void* dest, int ch, size_t count) {
+        #if __has_builtin(__builtin_memset)
+            return __builtin_memset(dest, ch, count);
+        #else
+            unsigned char* d = static_cast<unsigned char*>(dest);
+            unsigned char c = static_cast<unsigned char>(ch);
+            while (count--) {
+                *d++ = c;
+            }
+            return dest;
+        #endif
+    }
 }

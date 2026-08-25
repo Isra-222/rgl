@@ -23,6 +23,9 @@ add_library(rgl STATIC
     $<TARGET_OBJECTS:rglString>
 )
 
+#active the not redefinition of operator new:
+# target_compile_definitions(rgl PUBLIC RGL_NOT_OVERRIDE_GLOBAL_NEW)
+
 include_directories(rgl PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_executable(rgl_test main.cpp)

@@ -28,6 +28,7 @@
 
 #include "types.h"
 #include "utility/memory.h"
+#include "traits.h"
 
 namespace rgl{
 
@@ -103,28 +104,16 @@ namespace rgl{
     struct hasher;
 
     template<typename T>
-    struct arithmetic_hasher {
+    struct hasher {
         inline uint64_t operator()(const T& key, uint64_t seed) const {
-            return wyhash(reinterpret_cast<const uint8_t*>(&key), sizeof(T), seed);
+            if constexpr (__is_enum(T) || is_enum_v<T>) {
+                using Underlying = underlying_type_t<T>;
+                return hasher<Underlying>{}(static_cast<Underlying>(key), seed);
+            } 
+            else {
+                return wyhash(reinterpret_cast<const uint8_t*>(&key), sizeof(T), seed);
+            }
         }
     };
 
-    template <> struct hasher<int> : arithmetic_hasher<int> {};
-    template <> struct hasher<unsigned int> : arithmetic_hasher<unsigned int> {};
-    template <> struct hasher<long> : arithmetic_hasher<long> {};
-    template <> struct hasher<float> : arithmetic_hasher<float> {};
-    template <> struct hasher<double> : arithmetic_hasher<double> {};
-    template <> struct hasher<char> : arithmetic_hasher<char> {};
-    template <> struct hasher<unsigned long long> : arithmetic_hasher<unsigned long long> {};
-    template <> struct hasher<long long>          : arithmetic_hasher<long long> {};
-    template <> struct hasher<short>              : arithmetic_hasher<short> {};
-    template <> struct hasher<unsigned short>     : arithmetic_hasher<unsigned short> {};
-    template <> struct hasher<bool>           : arithmetic_hasher<bool> {};
-    template <> struct hasher<signed char>    : arithmetic_hasher<signed char> {};
-    template <> struct hasher<unsigned char>  : arithmetic_hasher<unsigned char> {};
-    template <> struct hasher<size_t>         : arithmetic_hasher<size_t> {};
-    template <> struct hasher<long double>    : arithmetic_hasher<long double> {};
-
-    template <typename T>
-    struct hasher<T*> : arithmetic_hasher<T*> {};
 }

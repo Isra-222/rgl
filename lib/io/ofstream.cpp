@@ -22,15 +22,42 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-namespace rgl {
-    ofstream::ofstream(const char* path) 
-        : ostream(::open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644)) {
-    }
+using namespace rgl;
 
-    ofstream::~ofstream() {
-        if (fd != -1) {
-            ::close(fd);
-            fd = -1;
-        }
+
+
+ofstream::ofstream(rgl::string_view path) 
+    : ostream(::open(path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644)) {}
+
+ofstream::ofstream(const char* path) 
+    : ostream(::open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644)) {}
+
+void ofstream::open(const char* path){
+    if(file_is_open) {
+        ::close(fd);
+    }
+    fd = ::open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    file_is_open = (fd >= 0);
+}
+
+void ofstream::open(string_view path){
+    ::open(path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+}
+void ofstream::close(){
+    if(file_is_open){
+        flush_buffer();
+        ::close(fd);
+        fd = -1;
+        file_is_open = false;
+    }
+}
+bool ofstream::is_open() const{
+    return file_is_open && fd >= 0;
+}
+
+ofstream::~ofstream() {
+    if (fd != -1) {
+        ::close(fd);
+        fd = -1;
     }
 }

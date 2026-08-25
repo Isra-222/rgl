@@ -45,7 +45,7 @@ namespace rgl {
             return cursor >= data.length(); 
         }
         
-        bool isOpen() const { 
+        bool is_open() const { 
             return true;
         }
         void str(const rgl::string& s) {

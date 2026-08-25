@@ -96,6 +96,24 @@ namespace rgl {
             is_long = true;
         }
     }
+    string::string(const char* str, size_t __size) : is_long(false){
+        if(__size <= SSO_CAP){
+            for (size_t i = 0; i < __size; ++i) {
+                sso.buffer[i] = str[i];
+            }
+            sso.buffer[__size] = '\0';
+            sso.len = static_cast<unsigned char>(__size);
+        } else {
+            long_str.buffer = new char[__size + 1];
+            for (size_t i = 0; i < __size; ++i) {
+                long_str.buffer[i] = str[i];
+            }
+            long_str.buffer[__size] = '\0';
+            long_str.len = __size;
+            long_str.capacity = __size;
+            is_long = true;
+        }
+    }
 
     string::string(size_t count, char ch) : is_long(false) {
         if (count <= SSO_CAP) {

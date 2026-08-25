@@ -20,12 +20,21 @@
 //ofstream
 #pragma once
 #include "ostream.h"
+#include "rgl/string/string_view.h"
 
 namespace rgl {
     class ofstream : public ostream {
+        bool file_is_open;
     public:
+        ofstream() : ostream(-1), file_is_open(false) {}
+        explicit ofstream(rgl::string_view path);
         explicit ofstream(const char* path);
         ~ofstream() override;
+
+        void open(const char* path);
+        void open(rgl::string_view path);
+        void close();
+        bool is_open() const;
 
         ofstream(const ofstream&) = delete;
         ofstream& operator=(const ofstream&) = delete;

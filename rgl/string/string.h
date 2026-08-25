@@ -59,6 +59,7 @@ namespace rgl {
         static const size_t npos = size_t(-1);
 
         string();
+        string(const char* str, size_t __size);
         string(const string_view& sv);
         string(const char* str);
         string(size_t count, char ch);

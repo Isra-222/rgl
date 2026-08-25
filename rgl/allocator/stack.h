@@ -53,9 +53,13 @@ namespace rgl {
 			return ptr;
 		}
 		void pop(){
+			if (m_current <= m_begin) return;
+			
 			size_t* size = reinterpret_cast<size_t*>(m_current - sizeof(size_t));
 			m_current -= (*size + sizeof(size_t));
 		}
-
+		[[nodiscard]] bool empty() const {
+            return m_current == m_begin;
+        }
 	};
 }//namespace rgl

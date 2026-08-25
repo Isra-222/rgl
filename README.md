@@ -222,6 +222,9 @@ RGL is developed with a focus on simplicity, performance, and transparency—ins
 __Random module by__: Ryo Suzuki <reputeless@gmail.com> for _Xoshiro PRNG_  
 repo: https://github.com/Reputeless/Xoshiro-cpp.git
 
+__Distribution module by__: Daniel Lemire <https://github.com/lemire>
+repo: https://github.com/lemire/fastrange
+
 __Hash module by__: Wang Yi <godspeed_china@yeah.net>  
 |- contributors: Reini Urban, Dietrich Epp, Joshua Haberman, Tommy Ettinger, Daniel Lemire, Otmar Ertl, cocowalla,  
 |_$ leo-yuriev, Diego Barrios Romero, paulie-g, dumblob, Yann Collet, ivte-ms, hyb, James Z.M. Gao, easyaspi314 (Devin), TheOneric for _wyhash_  
@@ -232,10 +235,6 @@ repo: <https://github.com/wangyi-fudan/wyhash>
 ## Next steps
 
 Keep in mind:
-
-* __Improve and expand__ the math module.
-
-* __Collect the best__ algorithms for the algorithm module.
 
 * Improve the memory driver in `memory/new.h`.
 

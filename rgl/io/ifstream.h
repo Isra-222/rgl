@@ -30,7 +30,9 @@ namespace rgl {
         size_t file_size = 0;
         size_t cursor = 0;
     public:
+        explicit ifstream(const char* path);
         explicit ifstream(const string& path);
+        ifstream();
         ~ifstream();
 
         ifstream(const ifstream&) = delete;
@@ -43,7 +45,9 @@ namespace rgl {
         char peek() const;
         void advance();
         bool isAtEnd() const;
-        bool isOpen() const;
+        void Open(const char* path);
+        void Open(const string& path);
+        bool is_open() const;
         const void* data() const { return data_ptr; }
         size_t size() const { return file_size; }
     };

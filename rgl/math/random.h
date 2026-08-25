@@ -24,6 +24,18 @@
 //	THE SOFTWARE.
 //
 //----------------------------------------------------------------------------------------
+// =======================================================================================
+/**
+* Fair maps to intervals without division.
+* Reference : http://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
+*
+* (c) Daniel Lemire
+* Apache License 2.0
+* 
+*/
+// =======================================================================================
+
+
 
 /*
  * Regular Library (rgl)
@@ -50,21 +62,13 @@
 #include "rgl/core/types.h"
 #include "rgl/containers/array.h"
 #include "rgl/core/limits.h"
+#include "rgl/time/anemo.h"
 
 # if __has_cpp_attribute(nodiscard) >= 201907L
 #	define XOSHIROCPP_NODISCARD_CXX20 [[nodiscard]]
 # else
 #	define XOSHIROCPP_NODISCARD_CXX20
 # endif
-
-
-//NOTE: ADD LATER RGL/LIMITS
-namespace rgl {
-    template <typename T>
-    struct limits {
-		static constexpr T max() { return (T)-1; }
-	};
-}
 
 namespace rgl::XoshiroCpp {
 	// A default seed value for the generators
@@ -378,33 +382,174 @@ namespace rgl::XoshiroCpp
 	}
 
 }
+// distribution
+namespace rgl::lamire {
+	/**
+	* Given a value "word", produces an integer in [0,p) without division.
+	* The function is as fair as possible in the sense that if you iterate
+	* through all possible values of "word", then you will generate all
+	* possible outputs as uniformly as possible.
+	*/
+	static inline uint32_t fastrange32(uint32_t word, uint32_t p) {
+		return (uint32_t)(((uint64_t)word * (uint64_t)p) >> 32);
+	}
+
+	#if defined(_MSC_VER) && defined (_WIN64)
+		#include <intrin.h>// should be part of all recent Visual Studio
+		#pragma intrinsic(_umul128)
+	#endif // defined(_MSC_VER) && defined (_WIN64)
+
+
+	/**
+	* Given a value "word", produces an integer in [0,p) without division.
+	* The function is as fair as possible in the sense that if you iterate
+	* through all possible values of "word", then you will generate all
+	* possible outputs as uniformly as possible.
+	*/
+	static inline uint64_t fastrange64(uint64_t word, uint64_t p) {
+	#ifdef __SIZEOF_INT128__ // then we know we have a 128-bit int
+		return (uint64_t)(((__uint128_t)word * (__uint128_t)p) >> 64);
+	#elif defined(_MSC_VER) && defined(_WIN64)
+		// supported in Visual Studio 2005 and better
+		uint64_t highProduct;
+		_umul128(word, p, &highProduct); // ignore low product
+		return highProduct;
+	#else
+		return word % p; // fallback
+	#endif // __SIZEOF_INT128__
+	}
+
+
+	#ifndef UINT32_MAX
+		#define UINT32_MAX  (0xffffffff)
+	#endif // UINT32_MAX
+
+	/**
+	* Given a value "word", produces an integer in [0,p) without division.
+	* The function is as fair as possible in the sense that if you iterate
+	* through all possible values of "word", then you will generate all
+	* possible outputs as uniformly as possible.
+	*/
+	static inline size_t fastrangesize(size_t word, size_t p) {
+	#if (SIZE_MAX == UINT32_MAX)
+		return (size_t)fastrange32(word, p);
+	#else // assume 64-bit
+		return (size_t)fastrange64(word, p);
+	#endif // SIZE_MAX == UINT32_MAX
+	}
+
+	/**
+	* Given a value "word", produces an integer in [0,p) without division.
+	* The function is as fair as possible in the sense that if you iterate
+	* through all possible values of "word", then you will generate all
+	* possible outputs as uniformly as possible.
+	*/
+	static inline int fastrangeint(int word, int p) {
+	#if (SIZE_MAX == UINT32_MAX)
+		return (int)fastrange32(word, p);
+	#else // assume 64-bit
+		return (int)fastrange64(word, p);
+	#endif // (SIZE_MAX == UINT32_MAX)
+	}
+
+}
 
 //----------
 namespace rgl {
 
-    using random_engine = XoshiroCpp::Xoshiro256StarStar;
+	template<typename T = int>
+	class uniform_int_distribution{
+		T min_val;
+		T max_val;
+	public:
+		constexpr explicit uniform_int_distribution(T min, T max) : min_val(min), max_val(max) {}
+		template<typename Engine>
+		constexpr T operator()(Engine& eng){
+			auto word = eng();
 
-    inline random_engine& get_global_engine() {
-        static random_engine global_rng(XoshiroCpp::DefaultSeed);
+			uint64_t range = 0;
+			if constexpr (is_signed_v<T>){
+				if (min_val < 0 && max_val > 0) {
+                    range = static_cast<uint64_t>(max_val) + static_cast<uint64_t>(-min_val) + 1;
+                } else {
+                    range = static_cast<uint64_t>(max_val - min_val) + 1;
+                }
+			}else{
+				range = static_cast<uint64_t>(max_val - min_val) + 1;
+			}
+			uint64_t offset = 0;
+			if(range <= 0xFFFFFFFFULL)
+				offset = lamire::fastrange32(static_cast<uint32_t>(word), static_cast<uint32_t>(range));
+			else
+				offset = lamire::fastrange64(static_cast<uint64_t>(word), range);
+			
+			return static_cast<T>(static_cast<uint64_t>(min_val) + offset);
+		}
+		constexpr T min() const { return min_val; }
+        constexpr T max() const { return max_val; }
+	};
+
+	template<typename T = float>
+	class uniform_real_distribution{
+		T min_val;
+		T max_val;
+	public:
+		constexpr explicit uniform_real_distribution(T min, T max) : min_val(min), max_val(max) {}
+
+		template<typename Engine>
+		constexpr T operator()(Engine& eng){
+			if constexpr(sizeof(T) <= 4){
+				float f = XoshiroCpp::FloatFromBits(static_cast<uint32_t>(eng()));
+				return min_val + static_cast<T>(f * (max_val - min_val));
+			}else{
+				double d = XoshiroCpp::DoubleFromBits(eng());
+				return min_val + static_cast<T>(d * (max_val - min_val));
+			}
+
+		}
+
+		constexpr T min() const { return min_val; }
+        constexpr T max() const { return max_val; }
+	};
+	using uniform_float_distribution  = uniform_real_distribution<float>;
+    using uniform_double_distribution = uniform_real_distribution<double>;
+
+    inline uint64_t random_device(){
+    	auto now = rgl::anemo::steady_clock::now();
+    	uint64_t seed = static_cast<uint64_t>(now.time_since_epoch().count());
+    	uint64_t stack_entropy = reinterpret_cast<uint64_t>(&seed);
+
+    	seed ^= stack_entropy + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
+    	return seed;
+    }
+
+    using randomEngine = XoshiroCpp::Xoshiro256StarStar;
+
+    inline randomEngine& getGlobalEngine() {
+        static randomEngine global_rng(random_device());
         return global_rng;
     }
 
     template <typename T>
     inline T random(T min, T max) {
-        auto& rng = get_global_engine();
-		//NOTE: USE rejection sampling MORE LATER
-        return static_cast<T>(min + (rng() % (max - min + 1)));
+		uniform_int_distribution<T> dist(min, max);
+        return dist(getGlobalEngine());
     }
 
     inline float random(float min, float max) {
-        auto& rng = get_global_engine();
-        return min + (XoshiroCpp::FloatFromBits(static_cast<rgl::uint32_t>(rng())) * (max - min));
+        uniform_float_distribution dist(min, max);
+        return dist(getGlobalEngine());
+    }
+    inline double random(double min, double max){
+    	uniform_double_distribution dist(min, max);
+    	return dist(getGlobalEngine());
     }
 
     template <typename T, rgl::size_t N>
-    void shuffle(T (&arr)[N], random_engine& rng) {
+    void shuffle(T (&arr)[N], randomEngine& rng) {
         for (rgl::size_t i = N - 1; i > 0; --i) {
-            rgl::size_t j = static_cast<rgl::size_t>(rng() % (i + 1));
+        	uniform_int_distribution<rgl::size_t> dist(0, i);
+            rgl::size_t j = dist(rng);
             T temp = arr[i];
             arr[i] = arr[j];
             arr[j] = temp;
@@ -413,7 +558,17 @@ namespace rgl {
 
     template <typename T, rgl::size_t N>
     void shuffle(T (&arr)[N]) {
-        shuffle(arr, get_global_engine());
+        shuffle(arr, getGlobalEngine());
+    }
+    inline bool coin_flip() {
+    	return (getGlobalEngine()() & 1ULL) != 0;
+    }
+    inline bool coin_flip(float probability) { //probability of true
+    	if (probability <= 0.0f) return false;
+        if (probability >= 1.0f) return true;
+
+        uniform_float_distribution dist(0.0f, 1.0f);
+        return dist(getGlobalEngine()) < probability;
     }
 
 }
