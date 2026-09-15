@@ -23,50 +23,34 @@
 
 namespace rgl {
 
-    inline void* memcpy(void* dest, const void* src, size_t count) {
-        #if __has_builtin(__builtin_memcpy)
-            return __builtin_memcpy(dest, src, count);
-        #else
-            char* d = static_cast<char*>(dest);
-            const char* s = static_cast<const char*>(src);
-            while (count--) *d++ = *s++;
-            return dest;
-        #endif
+    inline constexpr void* memcpy(void* dest, const void* src, size_t count) {
+        char* d = static_cast<char*>(dest);
+        const char* s = static_cast<const char*>(src);
+        while (count--) *d++ = *s++;
+        return dest;
     }
 
-    inline size_t strlen(const char* str) {
-        #if __has_builtin(__builtin_strlen)
-            return __builtin_strlen(str);
-        #else
-            const char* s = str;
-            while (*s) s++;
-            return static_cast<size_t>(s - str);
-        #endif
+    inline constexpr size_t strlen(const char* str) {
+        const char* s = str;
+        while(*s) ++s;
+        return static_cast<size_t>(s - str);
     }
 
-    inline int memcmp(const void* ptr1, const void* ptr2, size_t count) {
-        #if __has_builtin(__builtin_memcmp)
-            return __builtin_memcmp(ptr1, ptr2, count);
-        #else
-            const unsigned char* p1 = static_cast<const unsigned char*>(ptr1);
-            const unsigned char* p2 = static_cast<const unsigned char*>(ptr2);
-            while (count-- > 0) {
-                if (*p1 != *p2) return (*p1 > *p2) ? 1 : -1;
-                p1++; p2++;
-            }
-            return 0;
-        #endif
+    inline constexpr int memcmp(const void* ptr1, const void* ptr2, size_t count) {
+        const unsigned char* p1 = static_cast<const unsigned char*>(ptr1);
+        const unsigned char* p2 = static_cast<const unsigned char*>(ptr2);
+        while (count-- > 0) {
+            if (*p1 != *p2) return (*p1 > *p2) ? 1 : -1;
+            p1++; p2++;
+        }
+        return 0;
     }
-    inline void* memset(void* dest, int ch, size_t count) {
-        #if __has_builtin(__builtin_memset)
-            return __builtin_memset(dest, ch, count);
-        #else
-            unsigned char* d = static_cast<unsigned char*>(dest);
-            unsigned char c = static_cast<unsigned char>(ch);
-            while (count--) {
-                *d++ = c;
-            }
-            return dest;
-        #endif
+    inline constexpr void* memset(void* dest, int ch, size_t count) {
+        unsigned char* d = static_cast<unsigned char*>(dest);
+        unsigned char c = static_cast<unsigned char>(ch);
+        while (count--) {
+            *d++ = c;
+        }
+        return dest;
     }
 }

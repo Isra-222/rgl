@@ -23,7 +23,6 @@
 
 #include "rgl/core/hash.h"
 #include "rgl/core/types.h"
-#include "rgl/core/utility/memory.h"
 
 namespace rgl {
 
@@ -33,14 +32,15 @@ namespace rgl {
     public:
         static constexpr size_t npos = ~static_cast<size_t>(0);
 
-        string_view() : ptr(nullptr), len(0) {}
-        string_view(const char* str) : ptr(str), len(str ? strlen(str) : 0) {}
-        string_view(const char* str, size_t l) : ptr(str), len(l) {}
+        constexpr string_view() : ptr(nullptr), len(0) {}
+        constexpr string_view(const char* str) : ptr(str), len(str ? strlen(str) : 0) {}
+        constexpr string_view(const char* str, size_t l) : ptr(str), len(l) {}
         template <size_t N>
         constexpr string_view(const char (&str)[N]) noexcept : ptr(str), len(N - 1) {}
     
         const char* data() const { return ptr; }
         size_t size() const { return len; }
+        size_t length() const { return len; }
 
         constexpr string_view substr(size_t pos = 0, size_t count = npos) const{
             if(pos >= len) return string_view("", 0);
@@ -50,12 +50,5 @@ namespace rgl {
 
         char operator[](size_t i) const { return ptr[i]; }
         operator bool() const { return ptr != nullptr && len > 0; }
-    };
-
-    template <>
-    struct hasher<rgl::string_view> {
-        inline uint64_t operator()(const rgl::string_view& key, uint64_t seed) const {
-            return wyhash(reinterpret_cast<const uint8_t*>(key.data()), key.size(), seed);
-        }
     };
 }//namespace rgl

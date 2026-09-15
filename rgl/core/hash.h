@@ -101,18 +101,19 @@ namespace rgl{
 
 
     template<typename T>
-    struct hasher;
-
-    template<typename T>
     struct hasher {
-        inline uint64_t operator()(const T& key, uint64_t seed) const {
+        static inline uint64_t hash(const T& key, uint64_t seed) {
             if constexpr (__is_enum(T) || is_enum_v<T>) {
                 using Underlying = underlying_type_t<T>;
-                return hasher<Underlying>{}(static_cast<Underlying>(key), seed);
+                return hasher<Underlying>::hash(static_cast<Underlying>(key), seed);
             } 
             else {
                 return wyhash(reinterpret_cast<const uint8_t*>(&key), sizeof(T), seed);
             }
+        }
+
+        inline uint64_t operator()(const T& key, uint64_t seed) const {
+            return hash(key, seed);
         }
     };
 

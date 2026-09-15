@@ -6,7 +6,7 @@ add_compile_options(
     -Wextra 
     -Wall 
     -Werror
-    -fno-rtti 
+    -fno-rtti
     -fno-exceptions 
     -fno-stack-protector 
     -fno-unwind-tables 

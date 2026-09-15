@@ -34,7 +34,7 @@ namespace rgl {
     
         struct ShortString {
             char buffer[SSO_CAP + 1];
-            unsigned char len;
+            uint8_t len;
         };
 
         struct LongString {
@@ -49,14 +49,9 @@ namespace rgl {
         };
         bool is_long = false;
 
-        void reserve(size_t new_len);
-
-        char* data_ptr() { return is_long ? long_str.buffer : sso.buffer; }
-        const char* data_ptr() const { return is_long ? long_str.buffer : sso.buffer; }
-        size_t length_val() const { return is_long ? long_str.len : sso.len; }
-
+        char* allocate_for(size_t required_len);
     public:
-        static const size_t npos = size_t(-1);
+        static constexpr size_t npos = ~static_cast<size_t>(0);
 
         string();
         string(const char* str, size_t __size);
@@ -68,18 +63,9 @@ namespace rgl {
         
         template <size_t N>
         string(const char (&str)[N]) {
-            constexpr size_t actual_len = N - 1;
-            if constexpr (actual_len <= SSO_CAP) {
-                memcpy(sso.buffer, str, actual_len + 1);
-                sso.len = static_cast<unsigned char>(actual_len);
-                is_long = false;
-            } else {
-                long_str.buffer = new char[actual_len + 1];
-                memcpy(long_str.buffer, str, actual_len + 1);
-                long_str.len = actual_len;
-                long_str.capacity = actual_len;
-                is_long = true;
-            }
+            char* dest = allocate_for(N - 1);
+            if (str && N > 0)
+            memcpy(dest, str, N);
         }
 
         ~string();
@@ -87,68 +73,142 @@ namespace rgl {
         string& operator=(string&& other) noexcept;
         string& operator=(const string& other);
         string& operator=(const char* str);
+        string& operator=(const string_view other);
+        template<size_t N>
+        string& operator=(const char (&str)[N]){
+            char* currentBuf = allocate_for(N - 1);
+            memcpy(currentBuf, str, N);
+            return *this;
+        }
 
         bool operator==(const string& other) const;
         bool operator==(const char* str) const;
+        bool operator==(const string_view& other) const { return *this == other.data(); }
 
-        string& operator+=(char c);
-        string& operator+=(const char* str);
-        string& operator+=(const string& other);
+        void clear() {
+            if (is_long) {
+                long_str.len = 0;
+                long_str.buffer[0] = '\0';
+            } else {
+                sso.len = 0;
+                sso.buffer[0] = '\0';
+            }
+        }
+        void shrink_to_fit();
 
-        char& operator[](size_t index);
-        const char& operator[](size_t index) const;
+        bool empty() const{ return length() == 0; }
+        void reserve(size_t new_len);
+        void resize(size_t count, char c);
+        void resize(size_t count) { return resize(count, '\0'); }
 
-        void clear();
-        bool empty() const;
 
-        const char* c_str() const;
-        char* data() { return data_ptr(); }
-        const char* data() const { return data_ptr(); }
-        size_t size() const;
-        size_t length() const;
-        string_view view() const;
+        char* data() { return is_long ? long_str.buffer : sso.buffer; }
+        const char* data() const { return is_long ? long_str.buffer : sso.buffer; }
+        const char* c_str() const { return data(); }
 
-        operator bool() const;
-
-        void push_back(char c);
-        void append(const char* str);
-        void append(const string& str);
-
-        string substr(size_t pos = 0, size_t count = size_t(-1)) const;
+        size_t length() const { return is_long ? long_str.len : sso.len; }
+        size_t capacity() const { return is_long ? long_str.capacity : SSO_CAP; }
+        size_t size() const { return length(); }
         
+        string_view view() const { return string_view(data(), length()); }
+
+        char& operator[](size_t index) { return data()[index]; }
+        const char& operator[](size_t index) const { return data()[index]; }
+        operator bool() const { return length() > 0; }
+
+        string& push_back(const char c);
+
+        string& append(const char* str, size_t size);
+        string& append(const char* str) { return append(str, (str)? strlen(str) : 0); }
+        string& append(const string& str) { return append(str.data(), str.length()); }
+        string& append(const string_view str) { return append(str.data(), str.length()); }
+
+        string& operator+=(const char c) { return push_back(c); }
+        string& operator+=(const char* str) { return append(str); }
+        string& operator+=(const string& other) { return append(other); }
+        string& operator+=(const string_view other) { return append(other); }
+
+        string substr(size_t pos = 0, size_t count = npos) const;
+        void erase(size_t index, size_t count = npos);
+
         size_t find_first_of(const char* chars, size_t pos = 0) const;
-        size_t find_last_of(const char* chars, size_t pos = size_t(-1)) const;
-        size_t find_last_of(char ch, size_t pos = size_t(-1)) const;
-        
-        void erase(size_t index, size_t count = size_t(-1));
+        size_t find_last_of(const char* chars, size_t pos = npos) const;
+
+        size_t find_first_of(const string_view& chars, size_t pos = 0) const { return find_first_of(chars.data(), pos); }
+        size_t find_last_of(const string_view& chars, size_t pos = npos) const { return find_last_of(chars.data(), pos); }
+
+        size_t find_first_of(char ch, size_t pos = 0) const { return find(ch, pos); }
+        size_t find_last_of(char ch, size_t pos = npos) const { return rfind(ch, pos); }
         
         size_t find_first_not_of(const char* chars, size_t pos = 0) const;
-        size_t find_last_not_of(const char* chars, size_t pos = size_t(-1)) const;
-        
-        string& replace(size_t pos, size_t count, const char* str);
-        string& replace(size_t pos, size_t count, const string& str);
-        string& replace_all(const char* from, const char* to);
-        string& replace(char from, char to);
-        
-        size_t find(char ch, size_t pos = 0) const;
-        size_t find(const char* str, size_t pos = 0) const;
-        size_t find(const string& str, size_t pos = 0) const;
-        
-        size_t rfind(char ch, size_t pos = size_t(-1)) const;
-        size_t rfind(const char* str, size_t pos = size_t(-1)) const;
-        size_t rfind(const string& str, size_t pos = size_t(-1)) const;
-    };
+        size_t find_last_not_of(const char* chars, size_t pos = npos) const;
 
-    string operator+(const string& lhs, char rhs);
-    string operator+(const string& lhs, const char* rhs);
-    string operator+(const string& lhs, const string& rhs);
-    string operator+(char lhs, const string& rhs);
-    string operator+(const char* lhs, const string& rhs);
+        size_t find_first_not_of(const string_view& chars, size_t pos = 0) const { return find_first_not_of(chars.data(), pos); }
+        size_t find_last_not_of(const string_view& chars, size_t pos = npos) const { return find_last_not_of(chars.data(), pos); }
 
-    template <>
-    struct hasher<string> {
-        inline uint64_t operator()(const rgl::string& key, uint64_t seed) const {
-            return wyhash(reinterpret_cast<const uint8_t*>(key.data()), key.size(), seed);
+        size_t find_first_of(const string& str, size_t pos = 0) const { return find_first_of(str.data(), pos); }
+        size_t find_last_of(const string& str, size_t pos = npos) const { return find_last_of(str.data(), pos); }
+
+        size_t find_first_not_of(const string& str, size_t pos = 0) const { return find_first_not_of(str.data(), pos); }
+        size_t find_last_not_of(const string& str, size_t pos = npos) const { return find_last_not_of(str.data(), pos); }
+
+
+        size_t find(char ch, size_t pos = 0) const{
+            for (size_t i = pos; i < length(); ++i)
+                if (data()[i] == ch) return i;
+            return size_t(-1);
         }
+
+        size_t find(const char* str, size_t pos, size_t str_len) const;
+        size_t find(const char* str, size_t pos) const { return find(str, pos, str ? strlen(str) : 0); }
+        size_t find(const string& str, size_t pos) const { return find(str.c_str(), pos, str.length()); }
+        size_t find(const string_view str, size_t pos) const { return find(str.data(), pos, str.size()); }
+        
+
+        size_t rfind(char ch, size_t pos = npos) const{
+            if (pos == size_t(-1) || pos >= length()) pos = length() - 1;
+            for (size_t i = pos; i != size_t(-1); --i) 
+                if (data()[i] == ch) return i;
+            return size_t(-1);
+        }
+        size_t rfind(const char* str, size_t pos, size_t len) const;
+        size_t rfind(const char* str, size_t pos) const { return rfind(str, pos, str ? strlen(str) : npos); }
+        size_t rfind(const string& str, size_t pos) const { return rfind(str.data(), pos, str.size()); }
+        size_t rfind(const string_view str, size_t pos) const { return rfind(str.data(), pos, str.size()); }
+
+
+        string& replace(char from, char to){
+            for (size_t i = 0; i < length(); ++i)
+                if (data()[i] == from) data()[i] = to;
+            return *this;
+        }
+        string& replace(size_t pos, size_t count, const char* str, size_t len);
+        string& replace(size_t pos, size_t count, const char* str) { return replace(pos, count, str, str ? strlen(str) : 0); }
+        string& replace(size_t pos, size_t count, const string& str){ return replace(pos, count, str.c_str(), str.length()); }
+        string& replace(size_t pos, size_t count, const string_view str) { return replace(pos, count, str.data(), str.size()); }
+        
+        string& replace_all(const char* from, size_t from_len, const char* to, size_t to_len);
+        string& replace_all(const char* from, const char* to) { return replace_all(from, from ? strlen(from) : 0, to, to ? strlen(to) : 0); }
+        string& replace_all(const string_view& from, const string_view& to) { return replace_all(from.data(), from.size(), to.data(), to.size()); }
+        string& replace_all(const char* from, const string_view& to) { return replace_all(from, from ? strlen(from) : 0, to.data(), to.size()); }
+        string& replace_all(const string_view& from, const char* to) { return replace_all(from.data(), from.size(), to, to ? strlen(to) : 0); }
+    
+        string& insert(size_t index, const char* str, size_t len) { return replace(index, 0, str, len); }
+        string& insert(size_t index, const char* str) { return replace(index, 0, str); }
+        string& insert(size_t index, const string& str) { return replace(index, 0, str); }
+        string& insert(size_t index, string_view str) { return replace(index, 0, str); }
+        string& insert(size_t index, size_t count, char ch) {
+            string temp(count, ch);
+            return replace(index, 0, temp.data(), count);
+        }
+
     };
+    string operator+(const string& lhs, const string& rhs);
+    string operator+(const string& lhs, const char* rhs);
+    string operator+(const char* lhs, const string& rhs);
+    string operator+(const string& lhs, char rhs);
+    string operator+(char lhs, const string& rhs);
+    string operator+(const string& lhs, rgl::string_view rhs);
+    string operator+(rgl::string_view lhs, const string& rhs);
+    string operator+(rgl::string_view lhs, rgl::string_view rhs);
 }//namespace rgl
