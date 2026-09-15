@@ -58,7 +58,7 @@ namespace rgl {
 		Iterator current;
 	public:
 		using iterator_type = Iterator;
-		using difference_type = typename rgl::ssize_t;
+		using difference_type = typename iterator_traits<Iterator>::difference_type;
 		using value_type = typename iterator_traits<Iterator>::value_type;
 		using reference = typename rgl::iterator_traits<Iterator>::reference;
         using pointer = typename rgl::iterator_traits<Iterator>::pointer;

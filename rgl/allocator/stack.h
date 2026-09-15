@@ -41,6 +41,8 @@ namespace rgl {
 			m_begin = nullptr;
 			m_current = nullptr;
 		}
+		stackAllocator(const stackAllocator&) = delete;
+		stackAllocator& operator=(const stackAllocator&) = delete;
 
 		template<typename T>
 		T* push(size_t bytes){

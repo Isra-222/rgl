@@ -28,6 +28,7 @@ namespace rgl {
 		uint8_t* m_begin;
 		uint8_t* m_current;
 		size_t m_capacity;
+		linearAllocator* next = nullptr;
 	public:
 		linearAllocator(size_t s)
 		: m_begin(nullptr), m_current(nullptr), m_capacity(s){
@@ -35,6 +36,7 @@ namespace rgl {
 			m_current = m_begin;
 		}
 		~linearAllocator(){
+			if(next) delete next;
 			::operator delete[](m_begin);
 			m_begin = nullptr;
 			m_current = nullptr;
@@ -42,7 +44,13 @@ namespace rgl {
 
 		template<typename T>
 		T* push(size_t bytes){
-			if(m_current + bytes > m_begin + m_capacity) return nullptr;
+			if(m_current + bytes > m_begin + m_capacity){
+				if(!next){
+					size_t new_cap = (bytes > m_capacity * 2) ? bytes : m_capacity * 2;
+                    next = new linearAllocator(new_cap);
+				}
+				return next->push<T>(bytes);
+			}
 			
 			T* ptr = reinterpret_cast<T*>(m_current);
 			m_current += bytes;
@@ -50,6 +58,8 @@ namespace rgl {
 		}
 		void reset(){
 			m_current = m_begin;
+			if(next)
+				next->reset();
 		}
 	};
 }//namespace rgl

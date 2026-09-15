@@ -27,7 +27,7 @@ namespace rgl{
 		#elif defined(__aarch64__)
 		        __asm__ volatile ("nop");
 		#else
-		    ((void)0)
+		    ((void)0);
 		#endif
 	}
 	inline void relax(){
@@ -36,7 +36,7 @@ namespace rgl{
 		#elif defined(__aarch64__)
 		        __asm__ volatile ("yield");
 		#else
-			((void)0)
+			((void)0);
 		#endif
 	}
 }

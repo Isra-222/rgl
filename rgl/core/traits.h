@@ -90,7 +90,6 @@ namespace rgl {
     inline constexpr bool is_default_constructible_v = is_default_constructible<T>::value;
 
     template<typename T> struct is_arithmetic : false_type {};
-
     template<> struct is_arithmetic<bool> : true_type {};
     template<> struct is_arithmetic<char> : true_type {};
     template<> struct is_arithmetic<signed char> : true_type {};
@@ -106,20 +105,41 @@ namespace rgl {
     template<> struct is_arithmetic<float> : true_type {};
     template<> struct is_arithmetic<double> : true_type {};
     template<> struct is_arithmetic<long double> : true_type {};
-
     template<typename T>
     inline constexpr bool is_arithmetic_v = is_arithmetic<remove_cv_t<T>>::value;
+
     template<typename T> struct is_pointer : false_type {};
     template<typename T> struct is_pointer<T*> : true_type {};
-    
     template<typename T>
     inline constexpr bool is_pointer_v = is_pointer<remove_cv_t<T>>::value;
 
     template<typename T>
     struct is_enum : integral_constant<bool, __is_enum(T)> {};
-
     template<typename T>
     inline constexpr bool is_enum_v = is_enum<T>::value;
+
+
+    template<typename T>
+    struct make_unsigned { using type = T; };
+    template<> struct make_unsigned<char>           { using type = unsigned char; };
+    template<> struct make_unsigned<signed char>    { using type = unsigned char; };
+    template<> struct make_unsigned<short>          { using type = unsigned short; };
+    template<> struct make_unsigned<int>            { using type = unsigned int; };
+    template<> struct make_unsigned<long>           { using type = unsigned long; };
+    template<> struct make_unsigned<long long>      { using type = unsigned long long; };
+    template<typename T>
+    using make_unsigned_t = typename make_unsigned<T>::type;
+
+    template<typename T>
+    struct make_signed { using type = T; };
+    template<> struct make_signed<char>           { using type = unsigned char; };
+    template<> struct make_signed<signed char>    { using type = unsigned char; };
+    template<> struct make_signed<short>          { using type = unsigned short; };
+    template<> struct make_signed<int>            { using type = unsigned int; };
+    template<> struct make_signed<long>           { using type = unsigned long; };
+    template<> struct make_signed<long long>      { using type = unsigned long long; };
+    template<typename T>
+    using make_signed_t = typename make_signed<T>::type;
 
     template<typename T>
     struct underlying_type {
@@ -134,5 +154,12 @@ namespace rgl {
     };
     template<typename T>
     inline constexpr bool is_signed_v = is_signed<T>::value;
+
+    template<typename T>
+    struct is_unsigned{
+        static constexpr bool value = (T(0) < T(-1));
+    };
+    template<typename T>
+    inline constexpr bool is_unsigned_v = is_unsigned<T>::value;
 
 }//namespace rgl

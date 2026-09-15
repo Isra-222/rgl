@@ -1,5 +1,4 @@
 add_library(rglString STATIC
-	format.cpp
 	string.cpp
 	stringMethods.cpp
 	stringOperators.cpp

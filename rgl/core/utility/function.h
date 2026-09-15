@@ -21,6 +21,8 @@
 #pragma once
 
 #include "rgl/core/types.h"
+#include "rgl/core/error.h"
+#include "rgl/core/utility/move.h"
 
 namespace rgl{
 	template<typename F>
@@ -84,5 +86,6 @@ namespace rgl{
             }
             return *this;
         }
+        explicit operator bool() const noexcept{ return ptr != nullptr; }
 	};
 }//namespace rgl

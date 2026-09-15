@@ -191,7 +191,7 @@ namespace rgl {
         temp[i] = '\0';
         ungetch(c);
         
-        value = strtod(temp);
+        value = to_long_double(temp, i);
         return *this;
     }
     
@@ -208,7 +208,7 @@ namespace rgl {
         temp[i] = '\0';
         ungetch(c);
         
-        value = strtold(temp, nullptr);
+        value = to_long_double(temp, i);
         return *this;
     }
     

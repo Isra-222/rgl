@@ -24,303 +24,281 @@
 #include "rgl/string/format.h"
 #include <unistd.h>
 
-namespace rgl {
+using namespace rgl;
 
-    ostream::ostream(int file_descriptor) : fd(file_descriptor) {}
-    
-    ostream::~ostream() { 
-        flush_buffer(); 
+ostream::ostream(int file_descriptor) : fd(file_descriptor) {}
+
+ostream::~ostream() { 
+    flush_buffer(); 
+}
+void ostream::buffer_char(char c) {
+    if (pos >= BUFFER_SIZE) flush_buffer();
+    buffer[pos++] = c;
+}
+void ostream::_write(const char* str, size_t len) {
+    for (size_t i = 0; i < len; ++i) {
+        put(str[i]);
     }
-
-    void ostream::buffer_char(char c) {
-        if (pos >= BUFFER_SIZE) flush_buffer();
-        buffer[pos++] = c;
-    }
-
-    void ostream::_write(const char* str, size_t len) {
-        for (size_t i = 0; i < len; ++i) {
-            put(str[i]);
-        }
-    }
-
-    void ostream::print_unsigned(unsigned long long value, int base, bool uppercase) {
-        if (value == 0) {
-            put('0');
-            return;
-        }
-        
-        char temp[65];
-        int index = 0;
-        
-        while (value > 0) {
-            int digit = value % base;
-            temp[index++] = (digit < 10) ? ('0' + digit) : (uppercase ? ('A' + digit - 10) : ('a' + digit - 10));
-            value /= base;
-        }
-        
-        while (index > 0) {
-            put(temp[--index]);
-        }
+}
+void ostream::print_unsigned(unsigned long long value, int base, bool uppercase) {
+    if (value == 0) {
+        put('0');
+        return;
     }
     
-    void ostream::print_signed(long long value) {
+    char temp[65];
+    int index = 0;
+    
+    while (value > 0) {
+        int digit = value % base;
+        temp[index++] = (digit < 10) ? ('0' + digit) : (uppercase ? ('A' + digit - 10) : ('a' + digit - 10));
+        value /= base;
+    }
+    
+    while (index > 0) {
+        put(temp[--index]);
+    }
+}
+
+void ostream::print_signed(long long value) {
+    if (value < 0) {
+        put('-');
+        
+        value = -value;
+    }
+    print_unsigned(static_cast<unsigned long long>(value));
+}
+void ostream::flush_buffer() {
+    if (pos > 0 && fd != -1) {
+        ::write(fd, buffer, pos);
+        pos = 0;
+    }
+}
+ostream& ostream::set_base(FormatFlag base) {
+    flush_buffer();
+    current_base = base;
+    return *this;
+}
+
+ostream& ostream::set_uppercase(bool uppercase) {
+    flush_buffer();
+    uppercase_hex = uppercase;
+    return *this;
+}
+
+ostream& ostream::set_show_base(bool show) {
+    flush_buffer();
+    show_base_prefix = show;
+    return *this;
+}
+
+ostream& ostream::set_show_plus(bool show) {
+    flush_buffer();
+    show_plus = show;
+    return *this;
+}
+ostream& ostream::operator<<(char c) {
+    put(c);
+    return *this;
+}
+
+ostream& ostream::operator<<(signed char c) {
+    put(static_cast<char>(c));
+    return *this;
+}
+
+ostream& ostream::operator<<(unsigned char c) {
+    put(static_cast<char>(c));
+    return *this;
+}
+ostream& ostream::operator<<(const char* str) {
+    while (*str) put(*str++);
+    return *this;
+}
+
+ostream& ostream::operator<<(char* str) {
+    while (*str) put(*str++);
+    return *this;
+}
+
+ostream& ostream::operator<<(const rgl::string& str) {
+    _write(str.c_str(), str.length());
+    return *this;
+}
+ostream& ostream::operator<<(const rgl::string_view& str){
+    _write(str.data(), str.size());
+    return *this;
+}
+
+ostream& ostream::operator<<(short value) {
+    return operator<<(static_cast<long long>(value));
+}
+
+ostream& ostream::operator<<(int value) {
+    return operator<<(static_cast<long long>(value));
+}
+
+ostream& ostream::operator<<(long value) {
+    return operator<<(static_cast<long long>(value));
+}
+
+ostream& ostream::operator<<(long long value) {
+    if (current_base != FormatFlag::DEC) {
+        if (show_base_prefix) {
+            switch (current_base) {
+                case FormatFlag::HEX: *this << "0x"; break;
+                case FormatFlag::OCT: *this << "0"; break;
+                case FormatFlag::BIN: *this << "0b"; break;
+                default: break;
+            }
+        }
         if (value < 0) {
             put('-');
             value = -value;
+        } else if (show_plus && current_base == FormatFlag::DEC) {
+            put('+');
         }
-        print_unsigned(static_cast<unsigned long long>(value));
+        print_unsigned(static_cast<unsigned long long>(value), 
+                      static_cast<int>(current_base), uppercase_hex);
+    } else {
+        if (show_plus && value >= 0) put('+');
+        print_signed(value);
     }
+    return *this;
+}
 
-    void ostream::flush_buffer() {
-        if (pos > 0 && fd != -1) {
-            ::write(fd, buffer, pos);
-            pos = 0;
-        }
-    }
+ostream& ostream::operator<<(unsigned short value) {
+    return operator<<(static_cast<unsigned long long>(value));
+}
 
-    ostream& ostream::set_base(FormatFlag base) {
-        flush_buffer();
-        current_base = base;
-        return *this;
-    }
-    
-    ostream& ostream::set_uppercase(bool uppercase) {
-        flush_buffer();
-        uppercase_hex = uppercase;
-        return *this;
-    }
-    
-    ostream& ostream::set_show_base(bool show) {
-        flush_buffer();
-        show_base_prefix = show;
-        return *this;
-    }
-    
-    ostream& ostream::set_show_plus(bool show) {
-        flush_buffer();
-        show_plus = show;
-        return *this;
-    }
+ostream& ostream::operator<<(unsigned int value) {
+    return operator<<(static_cast<unsigned long long>(value));
+}
 
-    ostream& ostream::operator<<(char c) {
-        put(c);
-        return *this;
-    }
-    
-    ostream& ostream::operator<<(signed char c) {
-        put(static_cast<char>(c));
-        return *this;
-    }
-    
-    ostream& ostream::operator<<(unsigned char c) {
-        put(static_cast<char>(c));
-        return *this;
-    }
+ostream& ostream::operator<<(unsigned long value) {
+    return operator<<(static_cast<unsigned long long>(value));
+}
 
-    ostream& ostream::operator<<(const char* str) {
-        while (*str) put(*str++);
-        return *this;
-    }
-    
-    ostream& ostream::operator<<(char* str) {
-        while (*str) put(*str++);
-        return *this;
-    }
-    
-    ostream& ostream::operator<<(const rgl::string& str) {
-        _write(str.c_str(), str.length());
-        return *this;
-    }
-    ostream& ostream::operator<<(const rgl::string_view& str){
-        _write(str.data(), str.size());
-        return *this;
-    }
-    
-    ostream& ostream::operator<<(short value) {
-        return operator<<(static_cast<long long>(value));
-    }
-    
-    ostream& ostream::operator<<(int value) {
-        return operator<<(static_cast<long long>(value));
-    }
-    
-    ostream& ostream::operator<<(long value) {
-        return operator<<(static_cast<long long>(value));
-    }
-    
-    ostream& ostream::operator<<(long long value) {
-        if (current_base != FormatFlag::DEC) {
-            if (show_base_prefix) {
-                switch (current_base) {
-                    case FormatFlag::HEX: *this << "0x"; break;
-                    case FormatFlag::OCT: *this << "0"; break;
-                    case FormatFlag::BIN: *this << "0b"; break;
-                    default: break;
-                }
+ostream& ostream::operator<<(unsigned long long value) {
+    if (current_base != FormatFlag::DEC) {
+        if (show_base_prefix) {
+            switch (current_base) {
+                case FormatFlag::HEX: *this << "0x"; break;
+                case FormatFlag::OCT: *this << "0"; break;
+                case FormatFlag::BIN: *this << "0b"; break;
+                default: break;
             }
-            if (value < 0) {
-                put('-');
-                value = -value;
-            } else if (show_plus && current_base == FormatFlag::DEC) {
-                put('+');
-            }
-            print_unsigned(static_cast<unsigned long long>(value), 
-                          static_cast<int>(current_base), uppercase_hex);
-        } else {
-            if (show_plus && value >= 0) put('+');
-            print_signed(value);
         }
+        print_unsigned(value, static_cast<int>(current_base), uppercase_hex);
+    } else {
+        print_unsigned(value);
+    }
+    return *this;
+}
+
+ostream& ostream::operator<<(float value) {
+    return operator<<(static_cast<double>(value));
+}
+
+ostream& ostream::operator<<(double value) {
+    if (value != value) {
+        *this << "nan";
         return *this;
     }
-    
-    ostream& ostream::operator<<(unsigned short value) {
-        return operator<<(static_cast<unsigned long long>(value));
-    }
-    
-    ostream& ostream::operator<<(unsigned int value) {
-        return operator<<(static_cast<unsigned long long>(value));
-    }
-    
-    ostream& ostream::operator<<(unsigned long value) {
-        return operator<<(static_cast<unsigned long long>(value));
-    }
-    
-    ostream& ostream::operator<<(unsigned long long value) {
-        if (current_base != FormatFlag::DEC) {
-            if (show_base_prefix) {
-                switch (current_base) {
-                    case FormatFlag::HEX: *this << "0x"; break;
-                    case FormatFlag::OCT: *this << "0"; break;
-                    case FormatFlag::BIN: *this << "0b"; break;
-                    default: break;
-                }
-            }
-            print_unsigned(value, static_cast<int>(current_base), uppercase_hex);
-        } else {
-            print_unsigned(value);
-        }
+    if (value * 2 == value && value != 0) {
+        *this << ((value < 0) ? "-inf" : "inf");
         return *this;
     }
+    string temp = to_string(value);
+    write(temp.c_str(), temp.length()); 
+    flush_buffer();
+    return *this;
+}
+
+ostream& ostream::operator<<(bool value) {
+    *this << (value ? "true" : "false");
+    return *this;
+}
+ostream& ostream::operator<<(const void* ptr) {
+    FormatFlag old_base = current_base;
+    bool old_prefix = show_base_prefix;
+    bool old_uppercase = uppercase_hex;
     
-    ostream& ostream::operator<<(float value) {
-        return operator<<(static_cast<double>(value));
-    }
+    set_base(FormatFlag::HEX);
+    set_show_base(true);
+    set_uppercase(false);
     
-    ostream& ostream::operator<<(double value) {
-        if (value != value) {
-            *this << "nan";
-            return *this;
-        }
-        if (value * 2 == value && value != 0) {
-            *this << ((value < 0) ? "-inf" : "inf");
-            return *this;
-        }
-        char temp[64];
-        int len = double_to_buffer(temp, value);    
-        write(temp, len); 
-        flush_buffer();
-        return *this;
-    }
+    *this << reinterpret_cast<unsigned long long>(ptr);
     
-    ostream& ostream::operator<<(bool value) {
-        *this << (value ? "true" : "false");
-        return *this;
-    }
+    set_base(old_base);
+    set_show_base(old_prefix);
+    set_uppercase(old_uppercase);
+    return *this;
+}
 
-    ostream& ostream::operator<<(const void* ptr) {
-        FormatFlag old_base = current_base;
-        bool old_prefix = show_base_prefix;
-        bool old_uppercase = uppercase_hex;
-        
-        set_base(FormatFlag::HEX);
-        set_show_base(true);
-        set_uppercase(false);
-        
-        *this << reinterpret_cast<unsigned long long>(ptr);
-        
-        set_base(old_base);
-        set_show_base(old_prefix);
-        set_uppercase(old_uppercase);
-        return *this;
-    }
-    
-    ostream& ostream::operator<<(nullptr_t) {
-        *this << "nullptr";
-        return *this;
-    }
-    
-    ostream& ostream::operator<<(ostream& (*manipulator)(ostream&)) {
-        return manipulator(*this);
-    }
+ostream& ostream::operator<<(nullptr_t) {
+    *this << "nullptr";
+    return *this;
+}
 
-    ostream& ostream::put(char c) {
-        buffer_char(c);
-        return *this;
-    }
-    
-    ostream& ostream::write(const char* str, size_t count) {
-        _write(str, count);
-        return *this;
-    }
+ostream& ostream::operator<<(ostream& (*manipulator)(ostream&)) {
+    return manipulator(*this);
+}
+ostream& ostream::put(char c) {
+    buffer_char(c);
+    return *this;
+}
 
-    ostream& endl(ostream& os) {
-        os << '\n';
-        os.flush_buffer();
-        return os;
-    }
-
-    ostream& ends(ostream& os) {
-        os << '\0';
-        return os;
-    }
-
-    ostream& dec(ostream& os) {
-        os.set_base(ostream::FormatFlag::DEC);
-        return os;
-    }
-
-    ostream& hex(ostream& os) {
-        os.set_base(ostream::FormatFlag::HEX);
-        return os;
-    }
-
-    ostream& oct(ostream& os) {
-        os.set_base(ostream::FormatFlag::OCT);
-        return os;
-    }
-
-    ostream& bin(ostream& os) {
-        os.set_base(ostream::FormatFlag::BIN);
-        return os;
-    }
-
-    ostream& uppercase(ostream& os) {
-        os.set_uppercase(true);
-        return os;
-    }
-
-    ostream& nouppercase(ostream& os) {
-        os.set_uppercase(false);
-        return os;
-    }
-
-    ostream& showbase(ostream& os) {
-        os.set_show_base(true);
-        return os;
-    }
-
-    ostream& noshowbase(ostream& os) {
-        os.set_show_base(false);
-        return os;
-    }
-
-    ostream& showpos(ostream& os) {
-        os.set_show_plus(true);
-        return os;
-    }
-
-    ostream& noshowpos(ostream& os) {
-        os.set_show_plus(false);
-        return os;
-    }
+ostream& ostream::write(const char* str, size_t count) {
+    _write(str, count);
+    return *this;
+}
+ostream& rgl::endl(ostream& os) {
+    os << '\n';
+    os.flush_buffer();
+    return os;
+}
+ostream& rgl::ends(ostream& os) {
+    os << '\0';
+    return os;
+}
+ostream& rgl::dec(ostream& os) {
+    os.set_base(ostream::FormatFlag::DEC);
+    return os;
+}
+ostream& rgl::hex(ostream& os) {
+    os.set_base(ostream::FormatFlag::HEX);
+    return os;
+}
+ostream& rgl::oct(ostream& os) {
+    os.set_base(ostream::FormatFlag::OCT);
+    return os;
+}
+ostream& rgl::bin(ostream& os) {
+    os.set_base(ostream::FormatFlag::BIN);
+    return os;
+}
+ostream& rgl::uppercase(ostream& os) {
+    os.set_uppercase(true);
+    return os;
+}
+ostream& rgl::nouppercase(ostream& os) {
+    os.set_uppercase(false);
+    return os;
+}
+ostream& rgl::showbase(ostream& os) {
+    os.set_show_base(true);
+    return os;
+}
+ostream& rgl::noshowbase(ostream& os) {
+    os.set_show_base(false);
+    return os;
+}
+ostream& rgl::showpos(ostream& os) {
+    os.set_show_plus(true);
+    return os;
+}
+ostream& rgl::noshowpos(ostream& os) {
+    os.set_show_plus(false);
+    return os;
 }

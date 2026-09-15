@@ -85,6 +85,12 @@ namespace rgl{
 	    smallVector& operator=(smallVector&& other) noexcept {
             if (this != &other) {
                 clear();
+
+                if (_is_heap) {
+            		::operator delete[](_ptr);
+            		_is_heap = false;
+        		}
+
                 if (other._is_heap) {
                     _ptr = other._ptr;
                     _capacity = other._capacity;
@@ -138,13 +144,6 @@ namespace rgl{
                 _ptr[i].~T();
             }
             _size = 0;
-
-            if (_is_heap) {
-                ::operator delete[](_ptr);
-                _ptr = stack_ptr();
-                _capacity = N;
-                _is_heap = false;
-            }
         }
 		bool empty() const { return _size == 0; }
         
