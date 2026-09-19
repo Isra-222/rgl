@@ -12,13 +12,10 @@
 
 #include "rgl/core/types.h"
 
-extern "C" {
-    void* malloc(rgl::size_t size);
-    void free(void* ptr);
-}
+#include "rmalloc.h"
 
 inline void* operator new(rgl::size_t size) {
-    return malloc(size);
+    return rgl::rmalloc(size);
 }
 
 inline void* operator new(rgl::size_t, void* p) noexcept {
@@ -26,11 +23,11 @@ inline void* operator new(rgl::size_t, void* p) noexcept {
 }
 
 inline void operator delete(void* p) noexcept {
-    free(p);
+    rgl::rfree(p);
 }
 
 inline void* operator new[](rgl::size_t size) {
-    rgl::size_t* ptr = static_cast<rgl::size_t*>(malloc(size + sizeof(rgl::size_t)));
+    rgl::size_t* ptr = static_cast<rgl::size_t*>(rgl::rmalloc(size + sizeof(rgl::size_t)));
     *ptr = size;
     return static_cast<void*>(ptr + 1);
 }
@@ -42,14 +39,18 @@ inline void* operator new[](rgl::size_t, void* p) noexcept {
 inline void operator delete[](void* p) noexcept {
     if(!p) return;
     rgl::size_t* ptr = static_cast<rgl::size_t*>(p) - 1;
-    free(ptr);
+    rgl::rfree(ptr);
 }
 inline void operator delete(void* p, rgl::size_t size) noexcept {
-    ::free(p);
+    if(!p) return;
+    rgl::size_t* ptr = static_cast<rgl::size_t*>(p) - 1;
+    rgl::rfree(p);
 }
 
 inline void operator delete[](void* p, rgl::size_t size) noexcept {
-    ::free(p);
+    if(!p) return;
+    rgl::size_t* ptr = static_cast<rgl::size_t*>(p) - 1;
+    rgl::rfree(p);
 }
 
 #endif //RGL_NOT_OVERRIDE_GLOBAL_NEW

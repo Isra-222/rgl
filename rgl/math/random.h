@@ -526,7 +526,7 @@ namespace rgl {
     using randomEngine = XoshiroCpp::Xoshiro256StarStar;
 
     inline randomEngine& getGlobalEngine() {
-        static randomEngine global_rng(random_device());
+        thread_local randomEngine global_rng(random_device());
         return global_rng;
     }
 

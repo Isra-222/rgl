@@ -40,9 +40,7 @@ namespace rgl {
 
     template<typename T>
     class alignas(sizeof(T)) atomic final{
-    private:
         T value_;
-
     public:
         atomic() noexcept = default;
         constexpr atomic(T desired) noexcept : value_(desired) {}
@@ -96,6 +94,15 @@ namespace rgl {
         T fetch_add(T operand, memory_order order = memory_order::seq_cst) noexcept {
             return __atomic_fetch_add(&value_, operand, static_cast<int>(order));
         }
+        T fetch_sub(T operand, memory_order order = memory_order::seq_cst) noexcept {
+            return __atomic_fetch_sub(&value_, operand, static_cast<int>(order));
+        }
+
+        T operator--(int) noexcept { return fetch_sub(1); }
+        T operator--(int) volatile noexcept { return fetch_sub(1); }
+        T operator-=(T operand) noexcept { return fetch_sub(operand) - operand; }
+        T operator++(int) noexcept { return fetch_add(1); }
+        T operator+=(T operand) noexcept { return fetch_add(operand) + operand; }
     };
 
 } // namespace rgl

@@ -24,7 +24,7 @@
 #include "ostream.h"
 
 namespace rgl{
-    inline ostream out;
-    inline ostream err(2);
-    inline istream in;
+    extern ostream out;
+    extern ostream err;
+    extern istream in;
 }

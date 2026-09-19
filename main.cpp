@@ -72,22 +72,35 @@ rgl::mutex mtx;
 rgl::condition_variable cv;
 bool ready = false;
 
-void worker_task(int id) {
-    shared_counter.fetch_add(1);
-    mtx.lock();
-    rgl::out << "Thread " << id << " is processing." << rgl::endl;
-    mtx.unlock();
-    mtx.lock();
-    while(!ready) { ready = true; cv.notify_one(); }
-    mtx.unlock();
+void stress_worker_task(int thread_id) {
+    constexpr int iterations = 10000;
+    for (int i = 0; i < iterations; ++i) {
+        void* block = ::operator new[](32 + (i % 128));
+        if (block) {
+            volatile char* p = static_cast<char*>(block);
+            p[0] = static_cast<char>(thread_id);
+            ::operator delete[](block);
+        }
+        shared_counter.fetch_add(1);
+    }
 }
-
 void test_sync() {
-    rgl::thread t1(worker_task, 1);
-    rgl::thread t2(worker_task, 2);
-    t1.join();
-    t2.join();
-    rgl::out << "Final counter (expected: 2): " << shared_counter.load() << rgl::endl;
+    rgl::out << "--- Starting Multi-Threaded Stress Environment ---" << rgl::endl;
+    shared_counter.store(0);
+    
+    constexpr int stress_threads = 4;
+    {
+        rgl::thread threads[stress_threads];
+        for (int i = 0; i < stress_threads; ++i) {
+            threads[i] = rgl::thread(stress_worker_task, i + 1);
+        }
+        for (int i = 0; i < stress_threads; ++i) {
+            threads[i].join();
+        }
+    }
+    
+    rgl::out << "Stress Test Finished. Expected operations (" << (stress_threads * 10000) << "), Got: " << shared_counter.load() << rgl::endl;
+    rgl::out << "--------------------------------------------------" << rgl::endl;
 }
 
 void test_allocators() {
