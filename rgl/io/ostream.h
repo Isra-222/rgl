@@ -21,6 +21,7 @@
 #pragma once
 
 #include "rgl/core/types.h"
+#include "rgl/os/unistd.h"
 
 namespace rgl {
     class string;
@@ -28,7 +29,7 @@ namespace rgl {
 
     class ostream {
     protected:
-        int fd;
+        sys::file_descriptor fd;
     private:    
         static constexpr size_t BUFFER_SIZE = 4096;
         char buffer[BUFFER_SIZE];
@@ -54,7 +55,7 @@ namespace rgl {
         bool show_plus = false;
         
     public:
-        explicit ostream(int file_descriptor = 1);
+        explicit ostream(sys::file_descriptor fd = 1);
         virtual ~ostream();
 
         void flush_buffer();

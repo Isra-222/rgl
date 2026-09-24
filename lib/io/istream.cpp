@@ -21,7 +21,7 @@
 #include "rgl/io/istream.h"
 #include "rgl/string/format.h"
 
-#include <unistd.h>
+#include "rgl/os/unistd.h"
 
 namespace rgl {
     
@@ -29,7 +29,7 @@ namespace rgl {
         if (buffer_pos < buffer_size)
             return buffer[buffer_pos++];
         
-        ssize_t bytes = ::read(fd, buffer, sizeof(buffer));
+        ssize_t bytes = sys::read(fd, buffer, sizeof(buffer));
         if (bytes <= 0) {
             is_good = false;
             return '\0';

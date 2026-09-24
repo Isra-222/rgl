@@ -66,10 +66,4 @@ namespace rgl::internal{
     	}
 
     };
-
-    inline thread_cache& get_thread_cache(){
-    	static atomic<uint32_t> count = 0;
-    	thread_local thread_cache cache_instance(count++);
-    	return cache_instance;
-    }
 }//namespace rgl

@@ -22,11 +22,11 @@
 #include "rgl/string/string.h"
 #include "rgl/string/string_view.h"
 #include "rgl/string/format.h"
-#include <unistd.h>
+#include "rgl/os/unistd.h"
 
 using namespace rgl;
 
-ostream::ostream(int file_descriptor) : fd(file_descriptor) {}
+ostream::ostream(sys::file_descriptor fd) : fd(fd) {}
 
 ostream::~ostream() { 
     flush_buffer(); 
@@ -45,6 +45,8 @@ void ostream::print_unsigned(unsigned long long value, int base, bool uppercase)
         put('0');
         return;
     }
+    if(base == 0)
+        base = 10; //default
     
     char temp[65];
     int index = 0;
@@ -69,8 +71,8 @@ void ostream::print_signed(long long value) {
     print_unsigned(static_cast<unsigned long long>(value));
 }
 void ostream::flush_buffer() {
-    if (pos > 0 && fd != -1) {
-        ::write(fd, buffer, pos);
+    if (pos > 0 && fd) {
+        sys::write(fd, buffer, pos);
         pos = 0;
     }
 }

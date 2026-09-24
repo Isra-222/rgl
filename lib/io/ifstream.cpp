@@ -20,10 +20,10 @@
 #include "rgl/io/ifstream.h"
 #include "rgl/string/string.h"
 
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include "rgl/os/fcntl.h"
+#include "rgl/os/sys/mman.h"
+#include "rgl/os/sys/stat.h"
+#include "rgl/os/unistd.h"
 
 using namespace rgl;
 
@@ -63,8 +63,8 @@ ifstream& ifstream::operator=(ifstream&& other) noexcept {
 }
 
 void ifstream::close() {
-    if (data_ptr != nullptr && data_ptr != MAP_FAILED) {
-        ::munmap(data_ptr, file_size);
+    if (data_ptr != nullptr && data_ptr != sys::MAP_FAILED) {
+        sys::munmap(data_ptr, file_size);
         data_ptr = nullptr;
         file_size = 0;
         cursor = 0;
@@ -77,28 +77,28 @@ void ifstream::Open(const char* path) {
 
     if (!path) return;
 
-    int fd = ::open(path, O_RDONLY);
+    int fd = sys::open(path, sys::file_f::wronly);
     if (fd == -1) return;
 
-    struct stat st;
-    if (::fstat(fd, &st) == -1) {
-        ::close(fd);
+    sys::stat_ st;
+    if (sys::fstat(fd, &st) == -1) {
+        sys::close(fd);
         return;
     }
     
     file_size = static_cast<size_t>(st.st_size);
     if (file_size == 0) {
-        ::close(fd);
+        sys::close(fd);
         return;
     }
 
-    data_ptr = ::mmap(nullptr, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    data_ptr = sys::mmap(nullptr, file_size, sys::prot::read, sys::map::_private, fd, 0);
     
-    if (data_ptr == MAP_FAILED) {
+    if (data_ptr == sys::MAP_FAILED) {
         data_ptr = nullptr;
         file_size = 0;
     }
-    ::close(fd);
+    sys::close(fd);
     cursor = 0;
 }
 
@@ -119,7 +119,7 @@ bool ifstream::isAtEnd() const {
 }
 
 bool ifstream::is_open() const { 
-    return data_ptr != nullptr && data_ptr != MAP_FAILED; 
+    return data_ptr != nullptr && data_ptr != sys::MAP_FAILED; 
 }
 
 bool getline(rgl::ifstream& stream, rgl::string& line) {

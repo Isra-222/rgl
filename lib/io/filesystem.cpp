@@ -21,37 +21,37 @@
 #include "rgl/io/filesystem.h"
 #include "rgl/core/utility/move.h"
 
-#include <sys/stat.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <sys/types.h>
+#include "rgl/os/sys/stat.h"
+#include "rgl/os/unistd.h"
+#include "rgl/os/dirent.h"
+//#include <sys/types.h>
 
 namespace rgl {
     namespace fs {
         
         bool exists(const rgl::string& path) {
-            struct stat info;
-            return (stat(path.c_str(), &info) == 0);
+            sys::stat_ info;
+            return (sys::stat(path.c_str(), &info) == 0);
         }
         
         bool is_regular_file(const rgl::string& path) {
-            struct stat info;
+            sys::stat_ info;
             if (stat(path.c_str(), &info) != 0) {
                 return false;
             }
-            return S_ISREG(info.st_mode);
+            return sys::S_ISREG(info.st_mode);
         }
         
         bool is_directory(const rgl::string& path) {
-            struct stat info;
+            sys::stat_ info;
             if (stat(path.c_str(), &info) != 0) {
                 return false;
             }
-            return S_ISDIR(info.st_mode);
+            return sys::S_ISDIR(info.st_mode);
         }
         
         size_t file_size(const rgl::string& path) {
-            struct stat info;
+            sys::stat_ info;
             if (stat(path.c_str(), &info) != 0) {
                 return 0;
             }
@@ -68,7 +68,7 @@ namespace rgl {
         
         void directory_iterator::read_next() {
             if (!dir_stream) return;
-            while ((current_entry = readdir(dir_stream)) != nullptr) {
+            while ((current_entry = sys::readdir(dir_stream)) != nullptr) {
                 if (current_entry->d_name[0] == '.' && 
                     (current_entry->d_name[1] == '\0' || 
                      (current_entry->d_name[1] == '.' && current_entry->d_name[2] == '\0'))) {
@@ -90,7 +90,7 @@ namespace rgl {
         
         directory_iterator::directory_iterator(const rgl::string& path) 
             : dir_stream(nullptr), current_entry(nullptr), base_path(path), cached_entry("") {
-            dir_stream = opendir(path.c_str());
+            dir_stream = sys::opendir(path.c_str());
             if (dir_stream) {
                 read_next();
             }

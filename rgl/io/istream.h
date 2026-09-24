@@ -21,18 +21,17 @@
 #pragma once
 
 #include "rgl/string/format.h"
-
-#ifndef EOF
-    #define EOF (-1)
-#endif
+#include "rgl/os/unistd.h"
 
 namespace rgl {
+    inline constexpr int EOF = -1;
+
     class istream {
         char buffer[1024];
         size_t buffer_pos;
         size_t buffer_size;
         bool is_good;
-        int fd;
+        sys::file_descriptor fd;
         
         char getch();
         void ungetch(char c);

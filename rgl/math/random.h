@@ -247,7 +247,7 @@ namespace rgl::XoshiroCpp
 	template <rgl::size_t N>
 	inline constexpr rgl::array<rgl::uint64_t, N> SplitMix64::generateSeedSequence() noexcept
 	{
-		rgl::array<rgl::uint64_t, N> seeds = {};
+		rgl::array<rgl::uint64_t, N> seeds;
 
 		for (auto& seed : seeds)
 		{

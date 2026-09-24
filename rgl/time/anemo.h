@@ -19,10 +19,11 @@
 
 #pragma once 
 
-#include <time.h>
+#include "rgl/os/sys/time.h"
 #include "rgl/math/ratio.h"
 
 namespace rgl::anemo {
+    inline constexpr int ETIMEDOUT = 110;
     
     //durations
     template<typename Rep, typename Period = rgl::math::ratio<1>>
@@ -89,6 +90,24 @@ namespace rgl::anemo {
 
         constexpr Duration time_since_epoch() const { return duration_; }
         
+        constexpr time_point operator+(const Duration& d) const {
+            return time_point(duration_ + d);
+        }
+
+        constexpr time_point operator-(const Duration& d) const {
+            return time_point(duration_ - d);
+        }
+
+        time_point& operator+=(const Duration& d) {
+            duration_ += d;
+            return *this;
+        }
+
+        time_point& operator-=(const Duration& d) {
+            duration_ -= d;
+            return *this;
+        }
+
         constexpr Duration operator-(const time_point& rhs) const {
             return duration_ - rhs.duration_;
         }
@@ -102,8 +121,8 @@ namespace rgl::anemo {
         using time_point = rgl::anemo::time_point<system_clock, duration>;
 
         static time_point now() noexcept {
-            struct timespec ts;
-            clock_gettime(CLOCK_REALTIME, &ts);
+            sys::timespec ts;
+            clock_gettime(sys::CLOCK_REALTIME, &ts);
             int64_t total_ns = (ts.tv_sec * 1000000000LL) + ts.tv_nsec;
             return time_point(duration(total_ns));
         }
@@ -117,12 +136,31 @@ namespace rgl::anemo {
         using time_point = rgl::anemo::time_point<steady_clock, duration>;
 
         static time_point now() noexcept {
-            struct timespec ts;
-            clock_gettime(CLOCK_MONOTONIC, &ts);
+            sys::timespec ts;
+            clock_gettime(sys::CLOCK_MONOTONIC, &ts);
             
             int64_t total_ns = (ts.tv_sec * 1000000000LL) + ts.tv_nsec;
             
             return time_point(duration(total_ns));
         }
     };
+
+    inline sys::timespec to_abstime(const typename system_clock::time_point& tp) noexcept{
+        auto ns = duration_cast<nanoseconds>(tp.time_since_epoch());
+        int64_t total_ns = ns.count();
+
+        sys::timespec ts;
+        ts.tv_sec = static_cast<int64_t>(total_ns / 1000000000LL);
+        ts.tv_nsec = static_cast<int64_t>(total_ns % 1000000000LL);
+        return ts;
+    }
+
+    template<typename Rep, typename Period>
+    inline sys::timespec to_abstime_from_now(const Duration<Rep, Period>& rel_time) noexcept {
+        auto now_tp = system_clock::now();
+        auto sys_rel_duration = duration_cast<typename system_clock::duration>(rel_time);
+        auto future_tp = now_tp + sys_rel_duration;
+        
+        return to_abstime(future_tp);
+    }
 }//namespace rgl::anemo

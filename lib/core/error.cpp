@@ -20,22 +20,16 @@
 //error.cpp
 #include "rgl/core/error.h"
 #include "rgl/io/iostream.h"
+#include "rgl/os/sys/process.h"
 
-#if defined(__linux__)
-    #include <unistd.h> 
-#elif defined(_WIN32)
+#if defined(_WIN32)
     extern "C" __declspec(dllimport) void __stdcall ExitProcess(unsigned int uExitCode);
 #endif
 
 namespace rgl {
     [[noreturn]] void abort() noexcept {
         #if defined(__linux__)
-            asm volatile (
-                "mov $60, %%rax\n\t"
-                "mov $1, %%rdi\n\t"
-                "syscall"
-                : : : "rax", "rdi"
-            );
+            sys::exit(-1);
         #elif defined(_WIN32)
             ExitProcess(1);
         #endif

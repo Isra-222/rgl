@@ -1,8 +1,12 @@
 #pragma once
 
 #include "thread_local.h"
+#include "rgl/os/internal/thread_control_block.h"
 
 namespace rgl::internal{
+	inline thread_cache& get_thread_cache(){
+    	return get_control_block()->my_cache;
+    }
 	struct BigHeader {
         uint64_t magic;
         size_t total_size;
@@ -12,10 +16,10 @@ namespace rgl::internal{
 		size_t total = size + sizeof(BigHeader);
 		total = (total + 3) & ~size_t(3);
 
-		void* raw_ptr = mmap(nullptr, total, PROT_READ | PROT_WRITE,
-                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+		void* raw_ptr = sys::mmap(nullptr, total, sys::prot::read | sys::prot::write,
+            sys::map::_private | sys::map::anonymous, -1, 0);
 
-		if(raw_ptr == MAP_FAILED) return nullptr;
+		if(raw_ptr == sys::MAP_FAILED) return nullptr;
 
 		BigHeader* header = reinterpret_cast<BigHeader*>(raw_ptr);
 		header->magic = rgl_magic;
@@ -39,7 +43,7 @@ namespace rgl::internal{
 		BigHeader* header = reinterpret_cast<BigHeader*>(ptr) - 1;
 
 		if(header->magic == rgl_magic)
-			munmap(header, header->total_size);
+			sys::munmap(header, header->total_size);
 		else
 			get_thread_cache().free(ptr);
 

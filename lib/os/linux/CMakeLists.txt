@@ -1,0 +1,17 @@
+add_library(rglOs
+	#sys
+	sys/mman.cpp
+	sys/time.cpp
+	sys/futex.cpp
+	sys/process.cpp
+	sys/thread.cpp
+	sys/stat.cpp
+	#root
+	mutex.cpp
+	pthread.cpp
+	sched.cpp
+
+	fcntl.cpp
+	dirent.cpp
+	unistd.cpp
+)

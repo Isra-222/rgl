@@ -21,7 +21,7 @@
 #pragma once
 
 #include "rgl/string/string.h"
-#include <dirent.h>
+#include "rgl/os/dirent.h"
 
 namespace rgl {
     namespace fs {
@@ -39,8 +39,8 @@ namespace rgl {
         };
         
         class directory_iterator final {
-            DIR* dir_stream;
-            struct dirent* current_entry;
+            sys::DIR* dir_stream;
+            sys::dirent* current_entry;
             rgl::string base_path;
             directory_entry cached_entry;
             

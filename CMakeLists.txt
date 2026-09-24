@@ -4,7 +4,7 @@ project(rgl CXX) # Regular Library
 add_compile_options(
     -O3
     -march=native
-    
+
     -fdiagnostics-color=always 
     -Wextra 
     -Wall 
@@ -14,7 +14,20 @@ add_compile_options(
     -fno-stack-protector 
     -fno-unwind-tables 
     -fno-asynchronous-unwind-tables
+
+    -nostdinc
+    -nostdinc++
+    -ffreestanding
+
+    -Wno-nullability-completeness
     
+)
+
+add_link_options(
+    -nostdlib
+    -nodefaultlibs
+    -fno-use-linker-plugin
+    -T ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld
 )
 
 include_directories(rgl PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -26,6 +39,8 @@ add_library(rgl STATIC
     $<TARGET_OBJECTS:rglIo> 
     $<TARGET_OBJECTS:rglString>
     $<TARGET_OBJECTS:rglExtra>
+    $<TARGET_OBJECTS:rglOs>
+    $<TARGET_OBJECTS:rglNostd>
 )
 
 #active the not redefinition of operator new:

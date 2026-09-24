@@ -19,45 +19,50 @@
 
 //ostream.cpp
 #include "rgl/io/ofstream.h"
-#include <fcntl.h>
-#include <unistd.h>
+#include "rgl/os/fcntl.h"
+#include "rgl/os/unistd.h"
 
 using namespace rgl;
 
-
-
 ofstream::ofstream(rgl::string_view path) 
-    : ostream(::open(path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644)) {}
+    : ostream(sys::open(path.data(), sys::file_f::wronly | 
+        sys::file_f::creat | sys::file_f::trunc, sys::file_perm::owner_read | sys::file_perm::owner_write)) {}
 
 ofstream::ofstream(const char* path) 
-    : ostream(::open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644)) {}
+    : ostream(sys::open(path, sys::file_f::wronly | 
+        sys::file_f::creat | sys::file_f::trunc, sys::file_perm::owner_read | sys::file_perm::owner_write)) {}
 
-void ofstream::open(const char* path){
-    if(file_is_open) {
-        ::close(fd);
+void ofstream::open(const char* path) {
+    if (file_is_open) {
+        sys::close(fd);
     }
-    fd = ::open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    file_is_open = (fd >= 0);
+    fd = sys::open(path, sys::file_f::wronly | sys::file_f::creat | sys::file_f::trunc, sys::file_perm::owner_read | sys::file_perm::owner_write);
+    file_is_open = fd;
 }
 
-void ofstream::open(string_view path){
-    ::open(path.data(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+void ofstream::open(string_view path) {
+    if (file_is_open) {
+        sys::close(fd);
+    }
+    fd = sys::open(path.data(), sys::file_f::wronly 
+        | sys::file_f::creat | sys::file_f::trunc, sys::file_perm::owner_read | sys::file_perm::owner_write);
+    file_is_open = (fd.get() >= 0);
 }
 void ofstream::close(){
     if(file_is_open){
         flush_buffer();
-        ::close(fd);
+        sys::close(fd);
         fd = -1;
         file_is_open = false;
     }
 }
 bool ofstream::is_open() const{
-    return file_is_open && fd >= 0;
+    return file_is_open && (fd);
 }
 
 ofstream::~ofstream() {
-    if (fd != -1) {
-        ::close(fd);
+    if (fd) {
+        sys::close(fd);
         fd = -1;
     }
 }

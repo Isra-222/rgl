@@ -21,9 +21,9 @@
 #include "rgl/io/iostream.h"
 #include "rgl/io/ofstream.h"
 #include "rgl/math/random.h"
+#include "rgl/async/mutex.h"
 #include "rgl/async/thread.h"
 #include "rgl/async/atomic.h"
-#include "rgl/async/mutex.h"
 #include "rgl/memory/unique_ptr.h"
 #include "rgl/time/anemo.h"
 #include "rgl/core/utility/function.h"
@@ -46,7 +46,7 @@ void test_rgl_algorithms() {
     
     rgl::algo::sort(v2.begin(), v2.end());
     rgl::out << "Sort: ";
-    for(size_t i = 0; i < v2.size(); ++i) rgl::out << v2[i] << " ";
+    for(rgl::size_t i = 0; i < v2.size(); ++i) rgl::out << v2[i] << " ";
     rgl::out << rgl::endl;
 
     rgl::vector<int> v3;
@@ -55,7 +55,7 @@ void test_rgl_algorithms() {
     
     rgl::algo::rotate(v3.begin(), v3.begin() + 2, v3.end());
     rgl::out << "Rotate (expected: 3,4,5,1,2): ";
-    for(size_t i = 0; i < v3.size(); ++i) rgl::out << v3[i] << " ";
+    for(rgl::size_t i = 0; i < v3.size(); ++i) rgl::out << v3[i] << " ";
     rgl::out << rgl::endl;
 
     rgl::out << "Max (10, 20): " << rgl::algo::max(10, 20) << rgl::endl;
@@ -205,8 +205,8 @@ int main() {
     auto start = rgl::anemo::steady_clock::now();
     rgl::out << "Initializing RGL Library Test Suite..." << rgl::endl;
     rgl::out << "Typing a number and we can add one :" << rgl::endl;
-    int number;
-    rgl::in >> number;
+    int number = 5;
+    //rgl::in >> number;
     rgl::out << "Result is: " << ++number << rgl::endl;
 
     test_rgl_algorithms();

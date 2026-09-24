@@ -2,12 +2,11 @@
 
 #include "constants.h"
 #include "enlisted.h"
-#include <sys/mman.h>
+#include "rgl/os/sys/mman.h"
 
 namespace rgl::internal{
 	class thread_global final {
 		struct chunk_segment { void* raw_ptr; chunk_segment* next; };
-
 		atomic<page_metadata*> top;
 		chunk_segment* nextSeg;
 	public:
@@ -17,17 +16,17 @@ namespace rgl::internal{
             chunk_segment* current = nextSeg;
             while (current) {
                 chunk_segment* next = current->next;
-                munmap(current->raw_ptr, chunkSize + pageSize + sizeof(chunk_segment));
+                sys::munmap(current->raw_ptr, chunkSize + pageSize + sizeof(chunk_segment));
                 current = next;
             }
         }
 
 		void getRawPages(){
             size_t request_size = chunkSize + pageSize + sizeof(chunk_segment);
-            void* raw_ptr = mmap(nullptr, request_size, PROT_READ | PROT_WRITE,
-                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+            void* raw_ptr = sys::mmap(nullptr, request_size, sys::prot::read | sys::prot::write,
+                sys::map::_private | sys::map::anonymous, -1, 0);
 
-            if(raw_ptr == MAP_FAILED) return;
+            if(raw_ptr == sys::MAP_FAILED) return;
 
             uintptr_t raw_addr = reinterpret_cast<uintptr_t>(raw_ptr);
             uintptr_t aligned_addr = (raw_addr + sizeof(chunk_segment) + pageSize - 1) & ~(pageSize - 1);

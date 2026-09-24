@@ -20,8 +20,8 @@
 //thread
 #pragma once
 
-#include <pthread.h>
-#include <sched.h>
+#include "rgl/os/pthread.h"
+#include "rgl/os/sched.h"
 
 #include "rgl/core/error.h"
 #include "rgl/core/utility/tuple.h"
@@ -30,10 +30,7 @@
 
 namespace rgl {
     class thread {
-    public:
-        using native_handle_type = pthread_t;
-    private:
-        native_handle_type handle_;
+        sys::pthread_t handle_;
         bool joined_;
 
         struct thread_state_base {
@@ -46,13 +43,11 @@ namespace rgl {
             typename decay<F>::type func;
             tuple<typename decay<Args>::type...> args;
 
-        template<typename F_, typename... Args_>
-        thread_state(F_&& f, Args_&&... a) 
-        : func(rgl::move(f)), args(rgl::move(a)...) {}
+            template<typename F_, typename... Args_>
+            thread_state(F_&& f, Args_&&... a) 
+            : func(move(f)), args(move(a)...) {}
 
-            void run() override {
-                apply(move(func), move(args));
-            }
+                void run() override { apply(move(func), move(args)); }
         };
 
         static void* thread_routine(void* arg) {
@@ -88,10 +83,10 @@ namespace rgl {
             if (joinable()) abort();
         }
 
-        thread() noexcept : handle_(0), joined_(false) {}
+        thread() noexcept : handle_(nullptr), joined_(false) {}
 
         template<typename F, typename... Args>
-        explicit thread(F&& f, Args&&... args) : joined_(false) {
+        explicit thread(F&& f, Args&&... args) : handle_(nullptr), joined_(false) {
             using state_type = thread_state<decay_t<F>, decay_t<Args>...>;
             auto* state = new state_type(
                 forward<F>(f), 
@@ -104,23 +99,24 @@ namespace rgl {
             }
         }
 
-        [[nodiscard]] bool joinable() const noexcept {
-            return handle_ != 0;
-        }
+        [[nodiscard]] bool joinable() const noexcept { return handle_ != nullptr; }
 
         void join() {
             pthread_join(handle_, nullptr);
             joined_ = true;
-            handle_ = 0;
+            handle_ = nullptr;
         }
 
         void detach() {
             pthread_detach(handle_);
-            handle_ = 0;
+            handle_ = nullptr;
         }
 
-        native_handle_type native_handle() noexcept {
-            return handle_;
+        sys::pthread_t native_handle() noexcept { return handle_;}
+        
+        void swap(thread& other) noexcept{
+            rgl::swap(handle_, other.handle_);
+            rgl::swap(joined_, other.joined_);
         }
     };
 
@@ -152,12 +148,7 @@ namespace rgl {
             }
         }
 
-        inline void yield() noexcept {
-            sched_yield();
-        }
-
-        inline uint64_t get_id() noexcept {
-            return static_cast<uint64_t>(pthread_self());
-        }
+        void yield() noexcept { sys::sched_yield(); }
+        uint64_t get_id() noexcept { return static_cast<uint64_t>(sys::pthread_self().handle->tid); }
     }
 }

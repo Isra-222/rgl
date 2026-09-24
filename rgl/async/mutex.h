@@ -20,74 +20,77 @@
 //mutex
 #pragma once
 
-#include <pthread.h>
+#include "rgl/os/mutex.h"
+#include "rgl/time/anemo.h"
 
 namespace rgl {
-
     class mutex final{
+        sys::pthread_mutex_t mutex_;
     public:
-        using native_handle_type = pthread_mutex_t*;
+        //pthread_mutex_init(&mutex_, nullptr);
+        mutex() : mutex_(sys::mutex_kind::normal) {}
+        mutex(sys::mutex_kind kind) : mutex_(kind) {}
 
-        mutex() {
-            pthread_mutex_init(&mutex_, nullptr);
-        }
-
-        ~mutex() {
-            pthread_mutex_destroy(&mutex_);
-        }
+        ~mutex() { pthread_mutex_destroy(&mutex_); }
 
         mutex(const mutex&) = delete;
         mutex& operator=(const mutex&) = delete;
 
-        void lock() noexcept {
-            pthread_mutex_lock(&mutex_);
-        }
+        void trylock() noexcept { pthread_mutex_trylock(&mutex_); }
+        void lock() noexcept { pthread_mutex_lock(&mutex_); }
+        void unlock() noexcept { pthread_mutex_unlock(&mutex_); }
 
-        void unlock() noexcept {
-            pthread_mutex_unlock(&mutex_);
-        }
-
-        native_handle_type native_handle() noexcept {
-            return &mutex_;
-        }
-
-    private:
-        pthread_mutex_t mutex_;
+        sys::pthread_mutex_t* native_handle() noexcept { return &mutex_; }
     };
 
     class condition_variable final {
+        sys::pthread_cond_t cond_;
     public:
-        using native_handle_type = pthread_cond_t*;
+        enum class CvStatus {
+            no_timeout,
+            timeout
+        };
 
-        condition_variable() {
-            pthread_cond_init(&cond_, nullptr);
-        }
+        //pthread_cond_init(&cond_, nullptr);
+        condition_variable() = default;
 
-        ~condition_variable() {
-            pthread_cond_destroy(&cond_);
-        }
+        ~condition_variable() { pthread_cond_destroy(&cond_); }
 
         condition_variable(const condition_variable&) = delete;
         condition_variable& operator=(const condition_variable&) = delete;
 
-        void wait(mutex& m) noexcept {
-            pthread_cond_wait(&cond_, m.native_handle());
+        void notify_one() noexcept { pthread_cond_signal(&cond_); }
+        void notify_all() noexcept { pthread_cond_broadcast(&cond_); }
+
+        template<typename Predicate>
+        void wait(mutex& m, Predicate pred) noexcept { while(!pred()) pthread_cond_wait(&cond_, m.native_handle()); }
+        
+        template<typename Rep, typename Period>
+        CvStatus wait_for(mutex& m, const anemo::Duration<Rep, Period>& rel_time) {
+            auto abs_time = anemo::to_abstime(rel_time);
+            
+            int res = sys::pthread_cond_timedwait(&cond_, m.native_handle(), &abs_time);
+            return (res == anemo::ETIMEDOUT) ? CvStatus::timeout : CvStatus::no_timeout;
         }
 
-        void notify_one() noexcept {
-            pthread_cond_signal(&cond_);
+        template<typename Rep, typename Period>
+        int wait_for(mutex& m, const anemo::Duration<Rep, Period>& rel_time) {
+            sys::timespec abstime = anemo::to_abstime_from_now(rel_time);
+
+            return pthread_cond_timedwait(&cond_, m.native_handle(), &abstime);
         }
 
-        void notify_all() noexcept {
-            pthread_cond_broadcast(&cond_);
+        template<typename Clock, typename Duration>
+        int wait_until(mutex& m, const anemo::time_point<Clock, Duration>& timeout_time) {
+            auto sys_tp = anemo::duration_cast<anemo::system_clock::duration>(timeout_time.time_since_epoch());
+            anemo::system_clock::time_point tp_sys(sys_tp);
+            
+            sys::timespec abstime = anemo::to_abstime(tp_sys);
+            return pthread_cond_timedwait(&cond_, m.native_handle(), &abstime);
         }
 
-        native_handle_type native_handle() noexcept {
-            return &cond_;
-        }
-
-    private:
-        pthread_cond_t cond_;
+        
+        sys::pthread_cond_t* native_handle() noexcept { return &cond_; }
     };
 
 } // namespace rgl

@@ -1,4 +1,5 @@
 #include "rgl/memory/regular/manager.h"
+#include "rgl/memory/thread/stack_global.h"
 #include "rgl/io/iostream.h"
 
 namespace rgl{
@@ -27,6 +28,7 @@ namespace rgl{
 		const uint8_t* Lut = SizeLutWrapper.data;
 
 		thread_global GLOBAL_CENTRAL_CACHE;
+		stack_global GLOBAL_STACK_CACHE;
 	}//namespace internal
 }//namespace rgl
 
