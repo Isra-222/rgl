@@ -21,22 +21,17 @@
 
 using namespace rgl;
 
-long sys::detail::futex_call(volatile void* addr, uint32_t val, uint8_t flag, const timespec* timeout){
+long sys::futex_call(volatile void* addr, uint32_t val, futex_f flag, const timespec* timeout){
 	long ret;
-
-	register volatile void* __addr __asm__("rdi") = addr;		//NOTE: IMPROVE THIS SYSTEM MORE LATER
-															//ADD SECURE METHODS LIKE MMAP
-	register int  __op 	__asm__("rsi") = flag | 128;		// FLAG | FUTEX_PRIVATE_FLAG
-	register int  __val  __asm__("rdx") = val;
 	register const timespec* __timeout __asm__("r10") = timeout;
 
 	__asm__ volatile(
 		"syscall"
 		: "=a" (ret)
 		: "a" (202), //__NR_futex
-		  "r" (__addr),
-		  "r" (__op),
-		  "r" (__val),
+		  "D" (addr),
+		  "S" (static_cast<int>(flag)),
+		  "d" (static_cast<int>(val)),
 		  "r" (__timeout)
 		: "rcx", "r11", "memory"
 	);

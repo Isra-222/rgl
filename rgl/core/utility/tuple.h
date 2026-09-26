@@ -22,6 +22,7 @@
 
 #include "rgl/core/types.h"
 #include "rgl/core/traits.h"
+#include "rgl/core/utility/move.h"
 
 namespace rgl {
 

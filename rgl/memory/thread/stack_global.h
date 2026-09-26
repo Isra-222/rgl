@@ -24,7 +24,7 @@
 
 namespace rgl::internal{
     class stack_global final{
-        static constexpr size_t DEFAULT_STACK_SIZE = 2 * 1024 * 1024; // 2 MB
+        static constexpr size_t stack_size = RGL_DEFAULT_STACK_SIZE;
         static constexpr int page_size = 4096;
 
         struct stack_segment { 
@@ -41,7 +41,7 @@ namespace rgl::internal{
         atomic<bool> segment_lock = false;
 
         void* allocate_new_stack(){
-            size_t aligned_size = DEFAULT_STACK_SIZE;
+            size_t aligned_size = stack_size;
 
             void* raw_ptr = sys::mmap(nullptr, aligned_size, sys::prot::read | sys::prot::write,
                 sys::map::_private | sys::map::anonymous, -1, 0);
@@ -70,7 +70,7 @@ namespace rgl::internal{
             stack_segment* current = nextSeg;
             while(current) {
                 stack_segment* next = current->next;
-                sys::munmap(current->raw_ptr, DEFAULT_STACK_SIZE);
+                sys::munmap(current->raw_ptr, RGL_DEFAULT_STACK_SIZE);
                 current = next;
             }
         }

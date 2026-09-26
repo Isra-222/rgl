@@ -25,8 +25,10 @@
 	#define ARCH_SET_FS 0x1002
 #endif
 
-extern int main(void);
-extern int main(int argc, char** argv);
+#ifndef RGL_START_POINT
+    int main(void);
+    int main(int argc, char** argv);
+#endif
 
 using init_fn_t = void (*)(void);
 
@@ -45,40 +47,38 @@ namespace {
     }
 }
 
+namespace rgl::internal{
+    void* allocate_thread_storage();
+    thread_control_block* init_main_tcb();
+}
+
 extern "C" {
-	[[noreturn]] void _start(){
-		char** stack_pointer;
+	[[noreturn]] void __rgl_start(unsigned long* stack_ptr){
+        int argc = static_cast<int>(*stack_ptr);
+        char** argv = reinterpret_cast<char**>(stack_ptr + 1);
+        
+        auto* main_tcb = rgl::internal::init_main_tcb();
 
-		__asm__ volatile ("movq %%rsp, %0" : "=r"(stack_pointer));
-        __asm__ volatile (
-            "xor %%rbp, %%rbp\n\t"
-            "andq $-16, %%rsp\n\t"
-            : : : "memory"
-        );
-		int argc = *reinterpret_cast<int*>(stack_pointer);
-        char** argv = reinterpret_cast<char**>(stack_pointer + 1);
+        main_tcb->self = main_tcb;
+        main_tcb->tid = rgl::sys::gettid();
+        main_tcb->tgid = main_tcb->tid;
+        main_tcb->stack_base = reinterpret_cast<void*>(stack_ptr);
+        main_tcb->stack_size = 0;
+        main_tcb->routine = nullptr;
+        main_tcb->arg = nullptr;
+        main_tcb->retval = nullptr;
+        main_tcb->detach_state = 0;
+        main_tcb->state.store(0, rgl::memory_order_relaxed);
+        main_tcb->jf.store(0, rgl::memory_order_relaxed);
+        main_tcb->thread_dtor_count = 0;
 
-        static rgl::internal::thread_control_block main_tcb(0);
-
-        main_tcb.self = &main_tcb;
-        main_tcb.tid = rgl::sys::gettid();
-        main_tcb.tgid = main_tcb.tid;
-        main_tcb.stack_base = stack_pointer;
-        main_tcb.stack_size = 0;
-        main_tcb.routine = nullptr;
-        main_tcb.arg = nullptr;
-        main_tcb.retval = nullptr;
-        main_tcb.detach_state = 0;
-        main_tcb.state.store(0, rgl::memory_order_relaxed);
-        main_tcb.jf.store(0, rgl::memory_order_relaxed);
-        main_tcb.thread_dtor_count = 0;
-
-        rgl::sys::arch_prctl(ARCH_SET_FS, reinterpret_cast<unsigned long>(&main_tcb));
+        rgl::sys::arch_prctl(ARCH_SET_FS, reinterpret_cast<unsigned long>(main_tcb));
 		
         run_global_constructors();
 
 		int exit = main(argc, argv);
 		exit += main();
+        //rgl::sys::unmap(main_tcb->raw_tls_allocation, RGL_THREAD_LOCAL_SIZE);
 		rgl::sys::exit_group(exit);
 
 		while(1)

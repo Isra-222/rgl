@@ -8,3 +8,5 @@ compile_commands.json
 nothing.txt
 .vscode/
 .idea/
+# Coming soon
+benchmark/async

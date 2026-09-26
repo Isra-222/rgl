@@ -22,11 +22,6 @@
 #include "rgl/async/atomic.h"
 #include "rgl/memory/regular/thread_local.h"
 
-
-#ifndef MAX_THREAD_DESTRUCTORS
-    #define MAX_THREAD_DESTRUCTORS 64
-#endif
-
 namespace rgl {
 	using thread_routine_t = void* (*)(void*);
 	
@@ -53,8 +48,9 @@ namespace rgl {
 			atomic<int32_t> state;
 			atomic<int32_t> jf;
 
-			__rgl_DestructorEntry thread_dtor_table[MAX_THREAD_DESTRUCTORS];
+			__rgl_DestructorEntry thread_dtor_table[RGL_MAX_THREAD_DESTRUCTORS];
 			uint32_t thread_dtor_count = 0;
+			void* raw_tls_allocation;
 
 			thread_control_block(rgl::uint32_t id) : my_cache(id) {}
 			~thread_control_block() = default;

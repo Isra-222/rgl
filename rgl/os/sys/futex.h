@@ -25,14 +25,33 @@ namespace rgl::sys{
 	
 	struct timespec;
 
-	namespace detail{
-		long futex_call(volatile void* addr, uint32_t val, uint8_t flag, const timespec* timeout = nullptr);
-	}//namespace detail
+	enum class futex_f : uint16_t {
+        wait               = 0,
+        wake               = 1,
+        requeue            = 3,
+        cmp_requeue        = 4,
+        wake_op            = 5,
+        lock_pi            = 6,
+        unlock_pi          = 7,
+        trylock_pi         = 8,
+        wait_bitset        = 9,
+        wake_bitset        = 10,
+        wait_requeue_pi    = 11,
+        cmp_requeue_pi     = 12,
 
-	inline long futex_wake(volatile void* addr, uint32_t count){ return detail::futex_call(addr, count, 1); }
-	inline long futex_wait(volatile void* addr, uint32_t val){ return detail::futex_call(addr, val, 0); }
+        private_flag       = 128,
+        clock_realtime     = 256
+    };
+	inline constexpr futex_f operator|(futex_f a, futex_f b) {
+		return static_cast<futex_f>(static_cast<uint16_t>(a) | static_cast<uint16_t>(b));
+    }
+
+	long futex_call(volatile void* addr, uint32_t val, futex_f flag, const timespec* timeout = nullptr);
+	
+	inline long futex_wake(volatile void* addr, uint32_t count){ return futex_call(addr, count, futex_f::wake | futex_f::private_flag); }
+	inline long futex_wait(volatile void* addr, uint32_t val){ return futex_call(addr, val, futex_f::wait | futex_f::private_flag); }
 	inline long futex_timedwait(volatile void* addr, uint32_t val, const timespec* timeout){
-		return detail::futex_call(addr, val, 0, timeout);
+		return futex_call(addr, val, futex_f::wait | futex_f::private_flag, timeout);
 	}
 }// namespace rgl::sys
 

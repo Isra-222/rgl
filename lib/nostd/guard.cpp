@@ -20,11 +20,6 @@
 #include "rgl/core/error.h"
 #include "rgl/os/internal/thread_control_block.h"
 
-
-#ifndef MAX_DESTRUCTORS
-	#define MAX_DESTRUCTORS 256
-#endif
-
 extern "C" {
 
 	void* __dso_handle = nullptr;
@@ -33,12 +28,12 @@ extern "C" {
 	void __cxa_guard_release(long* guard) { *guard = 1; }
 	void __cxa_guard_abort(long*) {}
 
-    static rgl::internal::__rgl_DestructorEntry dtor_table[MAX_DESTRUCTORS];
+    static rgl::internal::__rgl_DestructorEntry dtor_table[RGL_MAX_DESTRUCTORS];
     static rgl::size_t dtor_count = 0;
 
     int __cxa_atexit(void (*destructor)(void*), void* arg, void* dso_handle) {
-    	if (dtor_count >= MAX_DESTRUCTORS) {
-    		panic("several global objects redifine the macro MAX_DESTRUCTORS");
+    	if (dtor_count >= RGL_MAX_DESTRUCTORS) {
+    		panic("several global objects redifine the macro RGL_MAX_DESTRUCTORS");
     		return -1;
     	}
     	dtor_table[dtor_count++] = rgl::internal::__rgl_DestructorEntry{destructor, arg, dso_handle};
@@ -70,8 +65,8 @@ extern "C" {
             }
         }
 
-        if (tcb->thread_dtor_count >= MAX_THREAD_DESTRUCTORS) {
-            panic("Too many thread_local destructors (exceeded MAX_THREAD_DESTRUCTORS)\nredifine the macro \" MAX_THREAD_DESTRUCTORS\"");
+        if (tcb->thread_dtor_count >= RGL_MAX_THREAD_DESTRUCTORS) {
+            panic("Too many thread_local destructors (exceeded RGL_MAX_THREAD_DESTRUCTORS)\nredifine the macro \" RGL_MAX_THREAD_DESTRUCTORS\"");
             return -1;
         }
 

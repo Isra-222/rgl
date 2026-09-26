@@ -21,6 +21,7 @@
 
 #include "rgl/core/types.h"
 #include "rgl/os/internal/thread_control_block.h"
+#include "rgl/os/sys/signals.h"
 
 namespace rgl::sys{
 	struct pthread_attr_t {
@@ -49,8 +50,8 @@ namespace rgl::sys{
 	int pthread_detach(pthread_t thread);
 	pthread_t pthread_self(void);
 	
-	//NOTE ADD ENUM CLASS SIGNALS
-	void pthread_kill(pthread_t thread, int sig);
+	
+	void pthread_kill(pthread_t thread, signal sig);
 
 	[[noreturn]] 
     [[deprecated("rgl::sys::pthread_exit bypasses C++ stack unwinding and skips RAII destructors. Use standard return instead.")]]

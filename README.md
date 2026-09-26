@@ -207,10 +207,6 @@ __Key Terms:__
 
 * GitHub: https://github.com/Isra-222/rgl
 
-* Issues: https://github.com/Isra-222/rgl/issues
-
-* Discussions: https://github.com/Isra-222/rgl/discussions
-
 ---
 
 ## Acknowledgments
@@ -225,17 +221,7 @@ repo: https://github.com/Reputeless/Xoshiro-cpp.git
 __Distribution module by__: Daniel Lemire <https://github.com/lemire>
 repo: https://github.com/lemire/fastrange
 
-__Hash module by__: Wang Yi <godspeed_china@yeah.net>  
-|- contributors: Reini Urban, Dietrich Epp, Joshua Haberman, Tommy Ettinger, Daniel Lemire, Otmar Ertl, cocowalla,  
-|_$ leo-yuriev, Diego Barrios Romero, paulie-g, dumblob, Yann Collet, ivte-ms, hyb, James Z.M. Gao, easyaspi314 (Devin), TheOneric for _wyhash_  
-repo: <https://github.com/wangyi-fudan/wyhash>
-
----
-
-## Next steps
-
-Keep in mind:
-
-* Improve the memory driver in `memory/new.h`.
+__Hash module by__:  Nicolas De Carli <https://github.com/Nicoshev>
+repo: <https://github.com/Nicoshev/rapidhash>
 
 ---

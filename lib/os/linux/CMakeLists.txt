@@ -1,4 +1,6 @@
 add_library(rglOs
+	#internal
+	internal/helper.cpp
 	#sys
 	sys/mman.cpp
 	sys/time.cpp

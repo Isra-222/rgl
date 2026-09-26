@@ -25,56 +25,16 @@
 #include "rgl/async/atomic.h"
 
 #include "rgl/memory/thread/stack_global.h"
-
 #include "rgl/core/utility/memory.h"
 
 #include "rgl/memory/new.h"
 
 using namespace rgl;
 
-//NEEDS A SUPPORT TO OTHER ARCH
-//NOTE CONFIGURE ALL FS OF EVERY THREAD ALSO MAIN
-internal::thread_control_block* internal::get_control_block() {
-	thread_control_block* tcb;
-	__asm__ volatile(
-		"movq %%fs:0, %0"
-		: "=r" (tcb)
-	);
-	return tcb;
-}
-
-//-------------------------------------
-
-//NOTE: ADD FLAGS LIKE ENUM CLASS
-
 void __rgl_run_thread_dtors();
 
 namespace rgl::internal{
-	void* allocate_thread_storage();
-}
-
-void internal::thread_trampoline(){
-	auto* tcb = get_control_block();
-	if(!tcb || !tcb->routine){
-		tcb->~thread_control_block();
-		sys::exit(-1);
-	}
-
-	void* retval = tcb->routine(tcb->arg);
-	tcb->retval = retval;
-
-    __rgl_run_thread_dtors();
-
-	tcb->state.store(1, memory_order_release);
-	tcb->jf.store(2, memory_order_release);
-    rgl::sys::futex_wake(&tcb->jf, 1);
-
-
-	if(tcb->detach_state == 1)
-		internal::GLOBAL_STACK_CACHE.releaseStack(tcb->stack_base);
-
-	tcb->~thread_control_block();
-	rgl::sys::exit(0);
+    void* allocate_thread_storage();
 }
 
 
@@ -82,9 +42,7 @@ int sys::pthread_create(pthread_t* __restrict__ thread, const pthread_attr_t* __
 	thread_routine_t start_routine, void* __restrict__ arg) {
 	static rgl::atomic<rgl::uint32_t> count = 1;
 
-	//now stack_size = 2MB 
-	//after: size_t stack_size = attr ? attr->stack_size : (2 * 1024 * 1024);
-	size_t stack_size = (2 * 1024 * 1024);
+	size_t stack_size = RGL_DEFAULT_STACK_SIZE;
 	int detach_state = attr ? attr->detach_state : 0;
 
 	void* stack_mem = internal::GLOBAL_STACK_CACHE.getStack();
@@ -108,12 +66,6 @@ int sys::pthread_create(pthread_t* __restrict__ thread, const pthread_attr_t* __
     tcb->jf.store(0, memory_order_relaxed);
     tcb->tgid = internal::get_control_block()->tgid;
     tcb->thread_dtor_count = 0;
-
-    //uintptr_t stack_top = reinterpret_cast<uintptr_t>(stack_mem) + stack_size;
-    //stack_top &= ~15UL;
-
-    //stack_top -= sizeof(void*);
-    //*reinterpret_cast<void**>(stack_top) = reinterpret_cast<void*>(internal::thread_trampoline);
 
     struct clone_args args;
     args.flags = clone_f::vm | clone_f::fs | clone_f::files | 
@@ -183,8 +135,8 @@ sys::pthread_t sys::pthread_self(void) {
 	return pthread_t(internal::get_control_block());
 }
 
-void sys::pthread_kill(pthread_t thread, int sig) {
-	tgkill(internal::get_control_block()->tgid, thread.handle->tid, sig);
+void sys::pthread_kill(pthread_t thread, signal sig) {
+	tgkill(internal::get_control_block()->tgid, thread.handle->tid, static_cast<int>(sig));
 }
 [[noreturn]] 
 void sys::pthread_exit(void* retval){

@@ -16,5 +16,7 @@
  * License along with this library; if not, see
  * <https://www.gnu.org/licenses/>.
 */
-__attribute__((weak)) int main(void) { return 0;}
-__attribute__((weak)) int main(int, char**) { return 0; }
+#ifndef RGL_START_POINT
+	__attribute__((weak)) int main(void) { return 0;}
+	__attribute__((weak)) int main(int, char**) { return 0; }
+#endif
