@@ -25,10 +25,8 @@
 	#define ARCH_SET_FS 0x1002
 #endif
 
-#ifndef RGL_START_POINT
-    int main(void);
-    int main(int argc, char** argv);
-#endif
+int main(int argc, char** argv);
+
 
 using init_fn_t = void (*)(void);
 
@@ -77,7 +75,6 @@ extern "C" {
         run_global_constructors();
 
 		int exit = main(argc, argv);
-		exit += main();
         //rgl::sys::unmap(main_tcb->raw_tls_allocation, RGL_THREAD_LOCAL_SIZE);
 		rgl::sys::exit_group(exit);
 

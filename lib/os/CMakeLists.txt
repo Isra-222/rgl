@@ -1,2 +1,4 @@
 #note: add support to difference windows and linux
-add_subdirectory(linux)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	add_subdirectory(linux)
+endif()

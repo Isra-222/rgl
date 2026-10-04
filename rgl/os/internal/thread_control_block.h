@@ -22,6 +22,8 @@
 #include "rgl/async/atomic.h"
 #include "rgl/memory/regular/thread_local.h"
 
+#include "rgl/extra/rgl_config.h"
+
 namespace rgl {
 	using thread_routine_t = void* (*)(void*);
 	

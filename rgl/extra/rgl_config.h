@@ -1,0 +1,21 @@
+#ifndef RGL_CONFIG
+#define RGL_CONFIG
+
+/*
+#ifndef RGL_NOT_OVERRIDE_GLOBAL_NEW
+	#define RGL_NOT_OVERRIDE_GLOBAL_NEW
+#endif
+*/
+#ifndef RGL_DEFAULT_STACK_SIZE
+	#define RGL_DEFAULT_STACK_SIZE 1048576 // 1MB
+#endif
+
+#ifndef RGL_MAX_THREAD_DESTRUCTORS
+	#define RGL_MAX_THREAD_DESTRUCTORS 64
+#endif
+
+#ifndef RGL_MAX_DESTRUCTORS
+	#define RGL_MAX_DESTRUCTORS 256
+#endif
+
+#endif

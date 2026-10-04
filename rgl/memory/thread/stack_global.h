@@ -22,6 +22,8 @@
 #include "rgl/os/sys/mman.h"
 #include "rgl/async/atomic.h"
 
+#include "rgl/extra/rgl_config.h"
+
 namespace rgl::internal{
     class stack_global final{
         static constexpr size_t stack_size = RGL_DEFAULT_STACK_SIZE;

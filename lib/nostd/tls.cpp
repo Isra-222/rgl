@@ -18,6 +18,7 @@
 */
 #include "rgl/core/utility/memory.h"
 #include "rgl/memory/new.h"
+#include "rgl/memory/rmalloc.h"
 #include "rgl/os/internal/thread_control_block.h"
 
 extern "C" {

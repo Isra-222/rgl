@@ -22,6 +22,7 @@
 #include "rgl/os/sys/futex.h"
 #include "rgl/memory/thread/stack_global.h"
 #include "rgl/memory/new.h"
+#include "rgl/memory/rmalloc.h"
 
 using namespace rgl;
 
