@@ -21,17 +21,27 @@
 #include "rgl/os/internal/thread_control_block.h"
 #include "rgl/os/sys/thread.h"
 
+#include "rgl/extra/rgl_config.h"
+
 #ifndef ARCH_SET_FS
-	#define ARCH_SET_FS 0x1002
+    #define ARCH_SET_FS 0x1002
 #endif
 
-int main(int argc, char** argv);
+#ifdef RGL_START_POINT_NEED_ARGS
+    int RGL_START_POINT(int argc, char* argv[]);
+
+    #define RGL_CALL_START_POINT RGL_START_POINT(argc, argv)
+#else
+    int RGL_START_POINT(void);
+
+    #define RGL_CALL_START_POINT RGL_START_POINT()
+#endif
 
 
 using init_fn_t = void (*)(void);
 
 extern "C"{
-	extern init_fn_t __init_array_start[];
+    extern init_fn_t __init_array_start[];
     extern init_fn_t __init_array_end[];
 }
 
@@ -51,9 +61,11 @@ namespace rgl::internal{
 }
 
 extern "C" {
-	[[noreturn]] void __rgl_start(unsigned long* stack_ptr){
-        int argc = static_cast<int>(*stack_ptr);
-        char** argv = reinterpret_cast<char**>(stack_ptr + 1);
+    [[noreturn]] void __rgl_start(unsigned long* stack_ptr){
+        #ifdef RGL_START_POINT_NEED_ARGS
+            int argc = static_cast<int>(*stack_ptr);
+            char** argv = reinterpret_cast<char**>(stack_ptr + 1);
+        #endif
         
         auto* main_tcb = rgl::internal::init_main_tcb();
 
@@ -71,14 +83,14 @@ extern "C" {
         main_tcb->thread_dtor_count = 0;
 
         rgl::sys::arch_prctl(ARCH_SET_FS, reinterpret_cast<unsigned long>(main_tcb));
-		
+        
         run_global_constructors();
 
-		int exit = main(argc, argv);
+        int exit = RGL_CALL_START_POINT;
         //rgl::sys::unmap(main_tcb->raw_tls_allocation, RGL_THREAD_LOCAL_SIZE);
-		rgl::sys::exit_group(exit);
+        rgl::sys::exit_group(exit);
 
-		while(1)
-			__asm__ volatile ("hlt");
-	}
+        while(1)
+            __asm__ volatile ("hlt");
+    }
 }

@@ -18,4 +18,11 @@
 	#define RGL_MAX_DESTRUCTORS 256
 #endif
 
+#ifndef RGL_START_POINT
+	#define RGL_START_POINT main
+#endif
+
+//#define RGL_START_POINT_NEED_ARGS
+
+
 #endif
