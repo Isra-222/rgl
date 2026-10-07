@@ -27,20 +27,6 @@
 
 using namespace rgl;
 
-ifstream::ifstream() : data_ptr(nullptr), file_size(0), cursor(0) {}
-
-ifstream::ifstream(const char* path) : data_ptr(nullptr), file_size(0), cursor(0) {
-    Open(path);
-}
-
-ifstream::ifstream(const string& path) : data_ptr(nullptr), file_size(0), cursor(0) {
-    Open(path);
-}
-
-ifstream::~ifstream() {
-    close();
-}
-
 ifstream::ifstream(ifstream&& other) noexcept 
     : data_ptr(other.data_ptr), file_size(other.file_size), cursor(other.cursor) {
     other.data_ptr = nullptr;
@@ -72,12 +58,13 @@ void ifstream::close() {
 }
 
 
-void ifstream::Open(const char* path) {
+void ifstream::open(string_view path) {
     close();
 
-    if (!path) return;
+    if (!path.data()) return;
 
-    int fd = sys::open(path, sys::file_f::wronly);
+    sys::file_descriptor file_desc = sys::open(path.data(), sys::file_f::rdonly);
+    int fd = file_desc.get();
     if (fd == -1) return;
 
     sys::stat_ st;
@@ -100,10 +87,6 @@ void ifstream::Open(const char* path) {
     }
     sys::close(fd);
     cursor = 0;
-}
-
-void ifstream::Open(const string& path) {
-    Open(path.c_str());
 }
 
 char ifstream::peek() const { 

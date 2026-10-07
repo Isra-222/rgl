@@ -28,26 +28,14 @@ ofstream::ofstream(rgl::string_view path)
     : ostream(sys::open(path.data(), sys::file_f::wronly | 
         sys::file_f::creat | sys::file_f::trunc, sys::file_perm::owner_read | sys::file_perm::owner_write)) {}
 
-ofstream::ofstream(const char* path) 
-    : ostream(sys::open(path, sys::file_f::wronly | 
-        sys::file_f::creat | sys::file_f::trunc, sys::file_perm::owner_read | sys::file_perm::owner_write)) {}
-
-void ofstream::open(const char* path) {
+void ofstream::open(rgl::string_view path) {
     if (file_is_open) {
         sys::close(fd);
     }
-    fd = sys::open(path, sys::file_f::wronly | sys::file_f::creat | sys::file_f::trunc, sys::file_perm::owner_read | sys::file_perm::owner_write);
+    fd = sys::open(path.data(), sys::file_f::wronly | sys::file_f::creat | sys::file_f::trunc, sys::file_perm::owner_read | sys::file_perm::owner_write);
     file_is_open = fd;
 }
 
-void ofstream::open(string_view path) {
-    if (file_is_open) {
-        sys::close(fd);
-    }
-    fd = sys::open(path.data(), sys::file_f::wronly 
-        | sys::file_f::creat | sys::file_f::trunc, sys::file_perm::owner_read | sys::file_perm::owner_write);
-    file_is_open = (fd.get() >= 0);
-}
 void ofstream::close(){
     if(file_is_open){
         flush_buffer();
@@ -55,9 +43,6 @@ void ofstream::close(){
         fd = -1;
         file_is_open = false;
     }
-}
-bool ofstream::is_open() const{
-    return file_is_open && (fd);
 }
 
 ofstream::~ofstream() {

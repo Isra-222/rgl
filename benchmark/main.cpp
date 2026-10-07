@@ -199,7 +199,7 @@ int test_string_switch(rgl::string_view value){
     .Default(0);
 }
 
-int main(int, char**) {
+int main(void) {
     rgl::string noc("XD", 3);
     print_license_header();
     auto start = rgl::anemo::steady_clock::now();

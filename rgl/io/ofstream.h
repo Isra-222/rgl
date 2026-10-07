@@ -28,13 +28,11 @@ namespace rgl {
     public:
         ofstream() : ostream(-1), file_is_open(false) {}
         explicit ofstream(rgl::string_view path);
-        explicit ofstream(const char* path);
         ~ofstream() override;
 
-        void open(const char* path);
         void open(rgl::string_view path);
         void close();
-        bool is_open() const;
+        bool is_open() const { return file_is_open && (fd); }
 
         ofstream(const ofstream&) = delete;
         ofstream& operator=(const ofstream&) = delete;

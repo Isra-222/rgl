@@ -20,24 +20,25 @@
 //ifstream
 #pragma once
 
+#include "rgl/string/string_view.h"
 #include "rgl/core/types.h"
 
 namespace rgl {
     class string;
-
+    
     class ifstream final {
         void* data_ptr = nullptr;
         size_t file_size = 0;
         size_t cursor = 0;
     public:
-        explicit ifstream(const char* path);
-        explicit ifstream(const string& path);
-        ifstream();
-        ~ifstream();
+        ifstream() : data_ptr(nullptr), file_size(0), cursor(0) {}
+        ~ifstream() { close(); }
+
+        ifstream(string_view path)
+         : data_ptr(nullptr), file_size(0), cursor(0) { open(path); }
 
         ifstream(const ifstream&) = delete;
-        ifstream& operator=(const ifstream&) = delete;
-        
+        ifstream& operator=(const ifstream&) = delete;        
         ifstream(ifstream&& other) noexcept;
         ifstream& operator=(ifstream&& other) noexcept;
 
@@ -45,10 +46,11 @@ namespace rgl {
         char peek() const;
         void advance();
         bool isAtEnd() const;
-        void Open(const char* path);
-        void Open(const string& path);
+
+        void open(string_view path);
         bool is_open() const;
         const void* data() const { return data_ptr; }
+
         size_t size() const { return file_size; }
     };
 

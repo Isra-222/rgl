@@ -31,11 +31,9 @@ namespace rgl::sys{
 
 		constexpr int get() const { return fd; }
 		operator bool() const { return fd >= 0; }
-
-		template<size_t num>
-		bool operator==(size_t) const noexcept  { return fd == num; }
-		template<size_t num>
-		bool operator!=(size_t) const noexcept { return fd != num; }
+		
+		constexpr bool operator==(int other) const noexcept { return fd == other; }
+		constexpr bool operator!=(int other) const noexcept { return fd != other; }
 
 		constexpr bool operator==(const file_descriptor& other) const noexcept { return fd == other.fd; }
         constexpr bool operator!=(const file_descriptor& other) const noexcept { return fd != other.fd; }
